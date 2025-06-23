@@ -1,0 +1,69 @@
+org: rafaelram
+service: api-usuarios
+
+### VARS
+custom:
+  role_id: 498917627164
+
+provider:
+  name: aws
+  runtime: python3.13
+  timeout: 30
+  iam:
+    role: arn:aws:iam::${self:custom.role_id}:role/LabRole  
+  environment:
+    USUARIOS_TABLE: t_usuarios
+    JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
+    STAGE: dev
+
+functions:
+  crear:
+    handler: src/handlers/crear_usuario.lambda_handler
+    events:
+      - http:
+          path: /auth/registro
+          method: post
+          cors: true
+          integration: lambda
+  login:
+    handler: src/handlers/login_usuario.lambda_handler
+    events:
+      - http:
+          path: /auth/login
+          method: post
+          cors: true
+          integration: lambda
+  validarToken:
+    handler: src/handlers/validar_token.lambda_handler
+    events:
+      - http:
+          path: auth/validar
+          method: get
+          cors: true
+
+
+resources:
+  Resources:
+    # Tabla de Usuarios
+    UsuariosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: tenant_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+          - AttributeName: tenant_id
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Service
+            Value: api-usuarios
