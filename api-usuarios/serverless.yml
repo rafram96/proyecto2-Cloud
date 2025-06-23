@@ -3,7 +3,7 @@ service: api-usuarios
 
 ### VARS
 custom:
-  role_id: 498917627164
+  role_id: 969784661290
 
 provider:
   name: aws
