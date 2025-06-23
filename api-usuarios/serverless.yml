@@ -4,17 +4,20 @@ service: api-usuarios
 ### VARS
 custom:
   role_id: 969784661290
+  stage: ${opt:stage, 'dev'}
+  tableName: p_usuarios-${self:custom.stage}
 
 provider:
   name: aws
   runtime: python3.13
   timeout: 30
+  stage: ${self:custom.stage}
   iam:
-    role: arn:aws:iam::${self:custom.role_id}:role/LabRole  
+    role: arn:aws:iam::${self:custom.role_id}:role/LabRole
   environment:
-    USUARIOS_TABLE: t_usuarios
+    USUARIOS_TABLE: p_usuarios-${self:provider.stage}
     JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
-    STAGE: dev
+    STAGE: ${self:provider.stage}
 
 functions:
   crear:
@@ -32,12 +35,12 @@ functions:
           path: /auth/login
           method: post
           cors: true
-          integration: lambda
+          integration: lambda  
   validarToken:
     handler: src/handlers/validar_token.lambda_handler
     events:
       - http:
-          path: auth/validar
+          path: /auth/validar
           method: get
           cors: true
 
@@ -46,7 +49,7 @@ resources:
   Resources:
     # Tabla de Usuarios
     UsuariosTable:
-      Type: AWS::DynamoDB::Table
+      Type: AWS::DynamoDB::Table      
       Properties:
         TableName: ${self:custom.tableName}
         AttributeDefinitions:
@@ -62,8 +65,3 @@ resources:
         BillingMode: PAY_PER_REQUEST
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
-        Tags:
-          - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Service
-            Value: api-usuarios
