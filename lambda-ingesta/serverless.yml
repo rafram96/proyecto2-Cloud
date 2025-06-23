@@ -1,0 +1,180 @@
+org: geraldocolchado
+service: lambda-ingesta
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 30
+  iam:
+    role: arn:aws:iam::498917627164:role/LabRole
+  
+  environment:
+    S3_BUCKET_NAME: tienda-electronicos-data-dev
+    STAGE: dev
+            - glue:GetTable
+            - glue:GetPartitions
+            - glue:CreatePartition
+          Resource: "*"
+
+functions:
+  actualizarProductosElasticsearch:
+    handler: src/handlers/actualizar_productos_elasticsearch.lambda_handler
+    timeout: 60
+    reservedConcurrency: 5
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::ImportValue: api-productos-${self:custom.stage}-ProductosTableStreamArn
+          batchSize: 10
+          startingPosition: LATEST
+          maximumBatchingWindowInSeconds: 5
+
+  actualizarComprasS3:
+    handler: src/handlers/actualizar_compras_s3.lambda_handler
+    timeout: 60
+    reservedConcurrency: 5
+    environment:
+      S3_BUCKET_NAME: ${self:custom.bucketName}
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::ImportValue: api-compras-${self:custom.stage}-ComprasTableStreamArn
+          batchSize: 10
+          startingPosition: LATEST
+          maximumBatchingWindowInSeconds: 5
+
+resources:
+  Resources:
+    # Bucket S3 para almacenar datos de compras
+    ComprasDataBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        VersioningConfiguration:
+          Status: Enabled
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Service
+            Value: lambda-ingesta
+
+    # Base de datos de Glue para el catálogo de datos
+    GlueDatabase:
+      Type: AWS::Glue::Database
+      Properties:
+        CatalogId: !Ref AWS::AccountId
+        DatabaseInput:
+          Name: tienda_electronicos_${self:custom.stage}
+          Description: "Base de datos para análisis de tienda electrónicos"
+
+    # Tabla de Glue para compras en formato JSON
+    GlueTableComprasJson:
+      Type: AWS::Glue::Table
+      Properties:
+        CatalogId: !Ref AWS::AccountId
+        DatabaseName: !Ref GlueDatabase
+        TableInput:
+          Name: compras_json
+          Description: "Tabla de compras en formato JSON"
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: json
+            typeOfData: file
+          PartitionKeys:
+            - Name: tenant_id
+              Type: string
+            - Name: year
+              Type: string
+            - Name: month
+              Type: string
+            - Name: day
+              Type: string
+          StorageDescriptor:
+            Columns:
+              - Name: compra_id
+                Type: string
+              - Name: usuario_id
+                Type: string
+              - Name: total
+                Type: double
+              - Name: metodo_pago
+                Type: string
+              - Name: estado
+                Type: string
+              - Name: created_at
+                Type: string
+              - Name: productos
+                Type: array<struct<codigo:string,nombre:string,precio_unitario:double,cantidad:int,subtotal:double>>
+            Location: !Sub "s3://${self:custom.bucketName}/compras/"
+            InputFormat: org.apache.hadoop.mapred.TextInputFormat
+            OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+            SerdeInfo:
+              SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+
+    # Tabla de Glue para compras en formato CSV
+    GlueTableComprasCsv:
+      Type: AWS::Glue::Table
+      Properties:
+        CatalogId: !Ref AWS::AccountId
+        DatabaseName: !Ref GlueDatabase
+        TableInput:
+          Name: compras_csv
+          Description: "Tabla de compras en formato CSV para análisis rápido"
+          TableType: EXTERNAL_TABLE
+          Parameters:
+            classification: csv
+            delimiter: ","
+            skip.header.line.count: "1"
+          PartitionKeys:
+            - Name: tenant_id
+              Type: string
+            - Name: year
+              Type: string
+            - Name: month
+              Type: string
+            - Name: day
+              Type: string
+          StorageDescriptor:
+            Columns:
+              - Name: compra_id
+                Type: string
+              - Name: usuario_id
+                Type: string
+              - Name: tenant_id_col
+                Type: string
+              - Name: total
+                Type: double
+              - Name: metodo_pago
+                Type: string
+              - Name: estado
+                Type: string
+              - Name: created_at
+                Type: string
+              - Name: num_productos
+                Type: int
+            Location: !Sub "s3://${self:custom.bucketName}/compras-csv/"
+            InputFormat: org.apache.hadoop.mapred.TextInputFormat
+            OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+            SerdeInfo:
+              SerializationLibrary: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Outputs:
+    S3BucketName:
+      Value: !Ref ComprasDataBucket
+      Export:
+        Name: ${self:service}-${self:custom.stage}-S3Bucket
+    
+    GlueDatabaseName:
+      Value: !Ref GlueDatabase
+      Export:
+        Name: ${self:service}-${self:custom.stage}-GlueDatabase
+
+plugins:
+  - serverless-python-requirements
