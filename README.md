@@ -7,29 +7,29 @@ Solución completa serverless para una tienda de productos electrónicos (tipo A
 
 ### Estructura Multi-Tenant de Base de Datos
 
-#### **Tabla: t_usuarios**
+#### **Tabla: p_usuarios**
+- **PK**: `email` (String)
+- **SK**: `tenant_id` (String)
+- **Hash**: SHA256 almacenado en el atributo `password`
+
+#### **Tabla: p_productos**
+- **PK**: `tenant_id` (String)
+- **SK**: `producto#<código>` (String)
+- **GSI**: `categoria` → Filtros por categoría
+
+#### **Tabla: p_compras**
 - **PK**: `tenant_id#user_id` (String)
-- **SK**: `email` (String)
-- **GSI**: `email` → Para login eficiente
-
-#### **Tabla: t_productos**
-- **PK**: `tenant_id` (String)  
-- **SK**: `producto#<codigo>` (String)
-- **GSI**: `categoria` → Para filtros por categoría
-
-#### **Tabla: t_compras**
-- **PK**: `tenant_id#usuario_id` (String)
 - **SK**: `compra#<compra_id>` (String)
 
-### 1. API Usuarios (Python 3.12)
-- **Lenguaje**: Python 3.12
-- **Autenticación**: JWT (1 hora de validez) 
-- **Base de datos**: DynamoDB (t_usuarios)
+### 1. API Usuarios (Python 3.13)
+- **Lenguaje**: Python 3.13
+- **Autenticación**: Token UUID (1 hora de validez)
+- **Base de datos**: DynamoDB (`p_usuarios`)
 - **Hash**: SHA256 para contraseñas
 - **Endpoints**:
-  - `POST /usuarios/crear` - Crear usuario
-  - `POST /usuarios/login` - Validar login  
-  - `POST /usuarios/validar` - Verificar token
+  - `POST /auth/registro` – Crear usuario
+  - `POST /auth/login`    – Iniciar sesión y obtener token
+  - `GET  /auth/validar`   – Validar token
 
 ### 2. API Productos (Node.js 18.x)
 - **Lenguaje**: Node.js 18.x
