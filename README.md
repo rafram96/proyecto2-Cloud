@@ -23,13 +23,15 @@ Solución completa serverless para una tienda de productos electrónicos (tipo A
 
 ### 1. API Usuarios (Python 3.13)
 - **Lenguaje**: Python 3.13
-- **Autenticación**: Token UUID (1 hora de validez)
+- **Autenticación**: JWT con PyJWT (expiración 1 hora)
+- **Token**: Generado en `/auth/registro` y `/auth/login`, retornado al cliente
+- **Validación**: Centralizada en `/auth/validar` decodificando y verificando expiración
 - **Base de datos**: DynamoDB (`p_usuarios`)
 - **Hash**: SHA256 para contraseñas
 - **Endpoints**:
-  - `POST /auth/registro` – Crear usuario
-  - `POST /auth/login`    – Iniciar sesión y obtener token
-  - `GET  /auth/validar`   – Validar token
+  - `POST /auth/registro` – Crear usuario y generar JWT
+  - `POST /auth/login`    – Iniciar sesión y obtener JWT
+  - `GET  /auth/validar`   – Validar JWT y obtener payload
 
 ### 2. API Productos (Node.js 18.x)
 - **Lenguaje**: Node.js 18.x
@@ -254,6 +256,5 @@ GROUP BY tenant_id;
 ✅ **3 Queries SQL para Athena** con análisis de negocio  
 ✅ **Documentación Swagger** para cada API  
 ✅ **Deployment automatizado** con Serverless Framework  
-✅ **Compatible con AWS Academy LabRole**  
 
 🎉 **¡Proyecto completado al 100%!**
