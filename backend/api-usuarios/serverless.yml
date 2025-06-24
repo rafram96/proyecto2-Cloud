@@ -3,8 +3,14 @@ service: api-usuarios
 
 custom:
   role_id: 969784661290
+  jwtLayerName: jwtLayer
 
-
+layers:
+  jwtLayer:
+    path: layers/jwt-layer
+    description: "Layer con PyJWT"
+    compatibleRuntimes:
+      - python3.13
 
 provider:
   name: aws
@@ -21,6 +27,8 @@ provider:
 functions:
   crear:
     handler: src/handlers/crear_usuario.lambda_handler
+    layers:
+      - { Ref: JwtLayerLambdaLayer }
     events:
       - http:
           path: /auth/registro
@@ -38,6 +46,8 @@ functions:
 
   login:
     handler: src/handlers/login_usuario.lambda_handler
+    layers:
+      - { Ref: JwtLayerLambdaLayer }
     events:
       - http:
           path: /auth/login
@@ -55,6 +65,8 @@ functions:
 
   validarToken:
     handler: src/handlers/validar_token.lambda_handler
+    layers:
+      - { Ref: JwtLayerLambdaLayer }
     events:
       - http:
           path: /auth/validar

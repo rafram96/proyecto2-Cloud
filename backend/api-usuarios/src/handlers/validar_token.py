@@ -1,6 +1,8 @@
 import os
 import json
-import uuid
+import jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
+from datetime import datetime
 
 # Encabezados CORS y content-type
 HEADERS = {
@@ -8,66 +10,29 @@ HEADERS = {
     'Access-Control-Allow-Origin': '*'
 }
 
-# Función que valida el token (simplificada sin JWT)
+# Función que valida el token (usando JWT)
 def lambda_handler(event, context):
     try:
-        print(event)
-        
-        # Obtener token del evento
+        # Extraer token de header o body
         token = None
-        
-        # Si viene de API Gateway, extraer del header
-        if 'headers' in event:
-            auth_header = event.get('headers', {}).get('Authorization')
-            if auth_header:
-                # Extraer token (formato: "Bearer <token>")
-                try:
-                    token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
-                except IndexError:
-                    mensaje = {'error': 'Formato de token inválido'}
-                    return {
-                        'statusCode': 401,
-                        'headers': HEADERS,
-                        'body': json.dumps(mensaje)
-                    }
-        
-        # También revisar en el body para compatibilidad
+        auth_header = event.get('headers', {}).get('Authorization') if 'headers' in event else None
+        if auth_header:
+            token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
         if not token and 'body' in event:
-            if isinstance(event['body'], str):
-                body = json.loads(event['body'])
-            else:
-                body = event['body']
+            body = json.loads(event['body']) if isinstance(event['body'], str) else event['body']
             token = body.get('token')
-        
         if not token:
-            mensaje = {'error': 'Token de autorización requerido'}
-            return {
-                'statusCode': 401,
-                'headers': HEADERS,
-                'body': json.dumps(mensaje)
-            }
+            return {'statusCode': 401,'headers': HEADERS,'body': json.dumps({'error':'Token de autorización requerido'})}
         
-        # Validar que sea un UUID válido (patrón de token simple)
+        # Decodificar y validar JWT
+        jwt_secret = os.environ.get('JWT_SECRET')
         try:
-            uuid.UUID(token)
-            mensaje = {'message': 'Token válido', 'valid': True}
-            return {
-                'statusCode': 200,
-                'headers': HEADERS,
-                'body': json.dumps(mensaje)
-            }
-        except ValueError:
-            mensaje = {'error': 'Token inválido'}
-            return {
-                'statusCode': 401,
-                'headers': HEADERS,
-                'body': json.dumps(mensaje)
-            }
+            payload = jwt.decode(token, jwt_secret, algorithms=['HS256'])
+            mensaje = {'message':'Token válido','valid':True,'payload':payload}
+            return {'statusCode':200,'headers':HEADERS,'body':json.dumps(mensaje)}
+        except ExpiredSignatureError:
+            return {'statusCode':401,'headers':HEADERS,'body':json.dumps({'error':'Token expirado'})}
+        except InvalidTokenError:
+            return {'statusCode':401,'headers':HEADERS,'body':json.dumps({'error':'Token inválido'})}
     except Exception as e:
-        print("Exception:", str(e))
-        mensaje = {'error': str(e)}
-        return {
-            'statusCode': 500,
-            'headers': HEADERS,
-            'body': json.dumps(mensaje)
-        }
+        return {'statusCode':500,'headers':HEADERS,'body':json.dumps({'error':str(e)})}

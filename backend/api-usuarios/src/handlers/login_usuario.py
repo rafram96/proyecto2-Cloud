@@ -3,63 +3,46 @@ import json
 import boto3
 import hashlib
 import uuid
+import jwt
 from datetime import datetime, timedelta
 
-HEADERS = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
-}
-
+# HEADER y dinamodb init
+HEADERS = {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}
 dynamodb = boto3.resource('dynamodb')
 USERS_TABLE = os.environ['USUARIOS_TABLE']
-TOKENS_TABLE = os.environ.get('TOKENS_TABLE')  # opcional
+JWT_SECRET = os.environ['JWT_SECRET']
 
-# Función para hashear contraseña
+# Hashear contraseña
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
 def lambda_handler(event, context):
     try:
-        raw_body = event.get('body', '{}')
-        if isinstance(raw_body, str):
-            data = json.loads(raw_body)
-        else:
-            data = raw_body
+        raw = event.get('body', '{}')
+        data = json.loads(raw) if isinstance(raw, str) else raw
         tenant_id = data.get('tenant_id')
         email = data.get('email')
         password = data.get('password')
-
+        # validar campos
         if not all([tenant_id, email, password]):
-            resp = {'error': 'Faltan parámetros tenant_id, email o password'}
-            return {'statusCode': 400, 'headers': HEADERS, 'body': json.dumps(resp)}
-
-        # Verificar usuario
+            return {'statusCode':400,'headers':HEADERS,'body':json.dumps({'error':'Faltan parámetros'})}
+        # verificar user
         table = dynamodb.Table(USERS_TABLE)
-        existing = table.get_item(Key={'email': email, 'tenant_id': tenant_id})
-        user = existing.get('Item')
-        if not user or hash_password(password) != user.get('password'):
-            resp = {'error': 'Credenciales inválidas'}
-            return {'statusCode': 401, 'headers': HEADERS, 'body': json.dumps(resp)}
-
-        # Generar token UUID con expiración opcional
-        token = str(uuid.uuid4())
-        expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
-        # Aquí podrías guardar el token en TOKENS_TABLE
-
-        resp = {
-            'message': 'Login exitoso',
-            'token': token,
-            'user': {
-                'user_id': user['user_id'],
-                'email': user['email'],
-                'nombre': user.get('nombre',''),
-                'tenant_id': tenant_id
-            },
-            'expires': expires
+        r = table.get_item(Key={'email':email,'tenant_id':tenant_id})
+        user = r.get('Item')
+        if not user or hash_password(password)!=user.get('password'):
+            return {'statusCode':401,'headers':HEADERS,'body':json.dumps({'error':'Credenciales inválidas'})}
+        # generar JWT
+        payload = {
+            'user_id': user['user_id'],
+            'email': user['email'],
+            'tenant_id': tenant_id,
+            'exp': datetime.utcnow() + timedelta(hours=1)
         }
-        return {'statusCode': 200, 'headers': HEADERS, 'body': json.dumps(resp)}
-
+        token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+        # response
+        resp = {'message':'Login exitoso','token':token,'user':{'user_id':user['user_id'],'email':user['email'],'tenant_id':tenant_id}}
+        return {'statusCode':200,'headers':HEADERS,'body':json.dumps(resp)}
     except Exception as e:
-        resp = {'error': str(e)}
-        return {'statusCode': 500, 'headers': HEADERS, 'body': json.dumps(resp)}
+        return {'statusCode':500,'headers':HEADERS,'body':json.dumps({'error':str(e)})}

@@ -3,6 +3,8 @@ import json
 import boto3
 import hashlib
 import uuid
+import jwt
+from datetime import datetime, timedelta
 
 HEADERS = {
     'Content-Type': 'application/json',
@@ -11,6 +13,7 @@ HEADERS = {
 
 dynamodb = boto3.resource('dynamodb')
 USERS_TABLE = os.environ['USUARIOS_TABLE']
+JWT_SECRET = os.environ['JWT_SECRET']
 
 # Función para hashear contraseña
 def hash_password(password):
@@ -52,10 +55,18 @@ def lambda_handler(event, context):
             'password': hashed,
             'nombre': nombre
         })
-
+        # Generar JWT al registrar
+        payload = {
+            'user_id': user_id,
+            'email': email,
+            'tenant_id': tenant_id,
+            'exp': datetime.utcnow() + timedelta(hours=1)
+        }
+        token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
         resp = {
             'message': 'Usuario registrado',
-            'user_id': user_id
+            'token': token,
+            'user': {'user_id': user_id, 'email': email, 'tenant_id': tenant_id}
         }
         return {
             'statusCode': 201,
