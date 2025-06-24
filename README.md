@@ -35,12 +35,15 @@ Solución completa serverless para una tienda de productos electrónicos (tipo A
 
 ### 2. API Productos (Node.js 18.x)
 - **Lenguaje**: Node.js 18.x
-- **Autenticación**: JWT protegido (invoca Lambda ValidarTokenAcceso)
-- **Base de datos**: DynamoDB (t_productos) + Streams
-- **Endpoints**:
-  - `POST /productos/listar` - Listar productos (paginado)
-  - `POST /productos/crear` - Crear producto
-  - `POST /productos/buscar` - Buscar producto
+- **Autenticación**: JWT con `jsonwebtoken` y middleware `requireAuth`
+- **Token**: Se envía en header `Authorization: Bearer <token>`
+- **Secret**: Comparte `JWT_SECRET` con API Usuarios
+- **Base de datos**: DynamoDB (`p_productos`)
+- **Streams**: Habilitados para CDC hacia Elasticsearch
+- **Endpoints protegidos** (requieren JWT válido):
+  - `POST /productos/listar`   - Listar productos (paginado)
+  - `POST /productos/crear`    - Crear producto
+  - `POST /productos/buscar`   - Buscar producto
   - `POST /productos/actualizar` - Actualizar producto
   - `POST /productos/eliminar` - Eliminar producto (soft delete)
 

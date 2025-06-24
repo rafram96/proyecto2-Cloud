@@ -1,0 +1,33 @@
+{
+  "name": "api-productos",
+  "version": "1.0.0",
+  "description": "API de productos para tienda electrónicos - Arquitectura serverless multi-tenant",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:test": "serverless deploy --stage test",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove:dev": "serverless remove --stage dev",
+    "remove:test": "serverless remove --stage test",
+    "remove:prod": "serverless remove --stage prod"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1691.0",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "serverless": "^3.38.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "dynamodb",
+    "serverless",
+    "productos",
+    "multi-tenant"
+  ],
+  "author": "Equipo Desarrollo",
+  "license": "MIT"
+}

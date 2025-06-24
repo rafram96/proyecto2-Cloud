@@ -1,0 +1,110 @@
+org: rafaelram
+service: api-productos
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  timeout: 30
+  iam:
+    role: arn:aws:iam::498917627164:role/LabRole
+  environment:
+    PRODUCTOS_TABLE: p_productos-${self:provider.stage}
+    JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
+    STAGE: ${self:provider.stage}
+
+functions:
+  crear:
+    handler: src/handlers/crearProducto.lambda_handler
+    events:
+      - http:
+          path: /productos/crear
+          method: post
+          cors: true
+          integration: lambda
+  listar:
+    handler: src/handlers/listarProductos.lambda_handler
+    events:
+      - http:
+          path: /productos/listar
+          method: post
+          cors: true
+          integration: lambda
+  buscar:
+    handler: src/handlers/buscarProducto.lambda_handler
+    events:
+      - http:
+          path: /productos/buscar
+          method: post
+          cors: true
+          integration: lambda
+  actualizar:
+    handler: src/handlers/actualizarProducto.lambda_handler
+    events:
+      - http:
+          path: /productos/actualizar
+          method: post
+          cors: true
+          integration: lambda
+  eliminar:
+    handler: src/handlers/eliminarProducto.lambda_handler
+    events:
+      - http:
+          path: /productos/eliminar
+          method: post
+          cors: true
+          integration: lambda
+
+resources:
+  Resources:
+    ProductosTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: codigo
+            AttributeType: S
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: categoria
+            AttributeType: S
+        KeySchema:
+          - AttributeName: codigo
+            KeyType: HASH
+          - AttributeName: tenant_id
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: TenantCategoriaIndex
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: categoria
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            BillingMode: PAY_PER_REQUEST
+        BillingMode: PAY_PER_REQUEST
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Service
+            Value: api-productos
+
+  Outputs:
+    ApiGatewayRestApiId:
+      Value: !Ref ApiGatewayRestApi
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ApiId
+    ProductosTableName:
+      Value: !Ref ProductosTable
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ProductosTable
+    ProductosTableArn:
+      Value: !GetAtt ProductosTable.Arn
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ProductosTableArn    
+    ProductosTableStreamArn:
+      Value: !GetAtt ProductosTable.StreamArn
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ProductosTableStreamArn
