@@ -8,7 +8,7 @@ provider:
   name: aws
   runtime: python3.13
   timeout: 30
-  stage: ${opt:stage, 'dev'}  # ← Solo usamos esta definición
+  stage: ${opt:stage, 'dev'} 
   iam:
     role: arn:aws:iam::${self:custom.role_id}:role/LabRole
   environment:
