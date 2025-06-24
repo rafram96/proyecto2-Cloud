@@ -40,21 +40,26 @@ export const userService = {  // Registro de usuario
     try {
       console.log('Enviando registro:', userData)
       const response = await api.post('/auth/registro', userData)
-      console.log('Respuesta registro:', response.data)
+      console.log('Respuesta registro completa:', response)
+      console.log('Status code:', response.status)
+      console.log('Response data:', response.data)
+      console.log('Response headers:', response.headers)
       
       // Verificar si la respuesta contiene errores del backend
       if (response.data.errorMessage || response.data.errorType) {
+        console.log('Error detectado en respuesta:', response.data)
         throw { error: response.data.errorMessage || 'Error en el servidor' }
       }
-      
-      // Verificar que la respuesta tenga los datos esperados
-      if (!response.data.message || !response.data.user_id) {
+        // Verificar que la respuesta tenga los datos esperados
+      if (!response.data.message || !response.data.usuario_id) {
+        console.log('Respuesta inválida - estructura:', response.data)
         throw { error: 'Respuesta inválida del servidor - registro no completado' }
       }
       
       return response.data
     } catch (error) {
       console.error('Error en registro:', error)
+      console.error('Error completo:', JSON.stringify(error, null, 2))
       if (error.code === 'ERR_NETWORK') {
         throw { error: 'Error de conexión. Verifica que la API esté funcionando.' }
       }
@@ -64,21 +69,24 @@ export const userService = {  // Registro de usuario
       }
       throw error.response?.data || { error: error.message || 'Error desconocido' }
     }
-  },
-  // Login de usuario
+  },  // Login de usuario
   login: async (credentials) => {
     try {
       console.log('Enviando login:', credentials)
       const response = await api.post('/auth/login', credentials)
-      console.log('Respuesta login:', response.data)
+      console.log('Respuesta login completa:', response)
+      console.log('Status code:', response.status)
+      console.log('Response data:', response.data)
       
       // Verificar si la respuesta contiene errores del backend
       if (response.data.errorMessage || response.data.errorType) {
+        console.log('Error detectado en respuesta:', response.data)
         throw { error: response.data.errorMessage || 'Error en el servidor' }
       }
       
       // Verificar que la respuesta tenga los datos esperados
       if (!response.data.token || !response.data.user) {
+        console.log('Respuesta inválida - estructura:', response.data)
         throw { error: 'Respuesta inválida del servidor - faltan datos de autenticación' }
       }
       
@@ -87,6 +95,7 @@ export const userService = {  // Registro de usuario
       return response.data
     } catch (error) {
       console.error('Error en login:', error)
+      console.error('Error completo:', JSON.stringify(error, null, 2))
       if (error.code === 'ERR_NETWORK') {
         throw { error: 'Error de conexión. Verifica que la API esté funcionando.' }
       }

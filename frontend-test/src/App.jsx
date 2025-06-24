@@ -7,10 +7,14 @@ import AuthStatus from './pages/AuthStatus'
 
 function App() {
   return (
-    <Router>
+    <Router future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }}>
       <div className="App">
         <Header />
-        <main className="main-content">          <Routes>
+        <main className="main-content">
+          <Routes>
             <Route path="/" element={<Login />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

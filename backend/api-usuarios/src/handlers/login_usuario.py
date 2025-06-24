@@ -98,10 +98,14 @@ def lambda_handler(event, context):
                     'tenantId': tenant_id
                 },
                 'expires': expires
-            }
+            }            
             return {
                 'statusCode': 200,
-                'body': mensaje
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(mensaje)
             }
         else:
             mensaje = {

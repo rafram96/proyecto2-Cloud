@@ -52,18 +52,20 @@ def lambda_handler(event, context):
                         ':tenant_prefix': f"{tenant_id}#"
                     }
                 )
-                if response['Items']:
-                    mensaje = {
+                if response['Items']:                    mensaje = {
                         'error': 'El usuario ya existe en este tenant'
                     }
-                    return {
+                return {
                         'statusCode': 409,
-                        'body': mensaje
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps(mensaje)
                     }
             except ClientError as e:
                 print(f"Error al verificar usuario existente: {e}")
             
-            # Hashea la contraseña antes de almacenarla
             hashed_password = hash_password(password)
               # Almacena los datos del usuario en la tabla de usuarios en DynamoDB
             # Nueva estructura: PK = tenant_id#user_id, SK = email
@@ -79,9 +81,7 @@ def lambda_handler(event, context):
                     'created_at': str(uuid.uuid1().time),
                     'active': True
                 }
-            )
-            
-            # Retornar un código de estado HTTP 201 (Created) y un mensaje de éxito
+            )              # Retornar un código de estado HTTP 201 (Created) y un mensaje de éxito
             mensaje = {
                 'message': 'Usuario creado exitosamente',
                 'usuario_id': usuario_id,
@@ -90,7 +90,11 @@ def lambda_handler(event, context):
             }
             return {
                 'statusCode': 201,
-                'body': mensaje
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(mensaje)
             }
         else:
             mensaje = {
@@ -98,7 +102,11 @@ def lambda_handler(event, context):
             }
             return {
                 'statusCode': 400,
-                'body': mensaje
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps(mensaje)
             }
 
     except json.JSONDecodeError:
@@ -107,7 +115,11 @@ def lambda_handler(event, context):
         }
         return {
             'statusCode': 400,
-            'body': mensaje
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps(mensaje)
         }
     except Exception as e:
         # Excepción y retornar un código de error HTTP 500
@@ -117,5 +129,9 @@ def lambda_handler(event, context):
         }        
         return {
             'statusCode': 500,
-            'body': mensaje
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps(mensaje)
         }
