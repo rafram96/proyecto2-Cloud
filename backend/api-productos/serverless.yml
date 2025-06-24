@@ -91,20 +91,30 @@ resources:
           - Key: Service
             Value: api-productos
 
-  Outputs:
-    ApiGatewayRestApiId:
-      Value: !Ref ApiGatewayRestApi
-      Export:
-        Name: ${self:service}-${self:custom.stage}-ApiId
-    ProductosTableName:
-      Value: !Ref ProductosTable
-      Export:
-        Name: ${self:service}-${self:custom.stage}-ProductosTable
-    ProductosTableArn:
-      Value: !GetAtt ProductosTable.Arn
-      Export:
-        Name: ${self:service}-${self:custom.stage}-ProductosTableArn    
-    ProductosTableStreamArn:
-      Value: !GetAtt ProductosTable.StreamArn
-      Export:
-        Name: ${self:service}-${self:custom.stage}-ProductosTableStreamArn
+    ProductImagesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: imagenes-productos-${self:provider.stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerPreferred
+
+    ProductImagesBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref ProductImagesBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::imagenes-productos-${self:provider.stage}/*"
+
