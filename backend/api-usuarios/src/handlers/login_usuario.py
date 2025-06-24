@@ -1,136 +1,61 @@
-import json
 import os
-import hashlib
+import json
 import boto3
+import hashlib
 import uuid
 from datetime import datetime, timedelta
-from botocore.exceptions import ClientError
 
-# Hashear contraseña para comparación
+HEADERS = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+}
+
+dynamodb = boto3.resource('dynamodb')
+USERS_TABLE = os.environ['USERS_TABLE']
+TOKENS_TABLE = os.environ.get('TOKENS_TABLE')  # opcional
+
+# Función para hashear contraseña
 def hash_password(password):
-    # Retorna la contraseña hasheada usando SHA256
-    return hashlib.sha256(password.encode()).hexdigest()
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-# Función que maneja el login de usuario
+
 def lambda_handler(event, context):
     try:
-        print(event)
-        
-        # Manejar el caso en que body sea string o diccionario
-        if isinstance(event['body'], str):
-            body = json.loads(event['body'])
-        else:
-            body = event['body']
-        
-        # Obtener datos del login
-        email = body.get('email')
-        password = body.get('password')
-        tenant_id = body.get('tenant_id')
-        
-        # Verificar que los campos requeridos existen
-        if email and password and tenant_id:            # Conectar DynamoDB
-            dynamodb = boto3.resource('dynamodb')
-            t_usuarios = dynamodb.Table(os.environ['USUARIOS_TABLE'])
-            
-            # Buscar usuario usando la nueva estructura: PK = tenant_id#user_id, SK = email  
-            try:
-                response = t_usuarios.scan(
-                    FilterExpression='SK = :email AND begins_with(PK, :tenant_prefix)',
-                    ExpressionAttributeValues={
-                        ':email': email,
-                        ':tenant_prefix': f"{tenant_id}#"
-                    }
-                )
-                
-                if not response['Items']:
-                    mensaje = {
-                        'error': 'Credenciales inválidas'
-                    }
-                    return {
-                        'statusCode': 401,
-                        'body': mensaje
-                    }
-                
-                user = response['Items'][0]  # Tomar el primer (y único) resultado
-                
-                # Verificar si el usuario está activo
-                if not user.get('active', True):
-                    mensaje = {
-                        'error': 'Usuario inactivo'
-                    }
-                    return {
-                        'statusCode': 401,
-                        'body': mensaje
-                    }
-                
-            except ClientError as e:
-                print(f"Error al buscar usuario: {e}")
-                mensaje = {
-                    'error': 'Error interno del servidor'
-                }
-                return {
-                    'statusCode': 500,
-                    'body': mensaje
-                }
-            
-            # Verificar contraseña hasheada
-            hashed_input_password = hash_password(password)
-            if hashed_input_password != user['password']:
-                mensaje = {
-                    'error': 'Credenciales inválidas'
-                }
-                return {
-                    'statusCode': 401,
-                    'body': mensaje
-                }            # Generar token UUID con expiración de 1 hora
-            token = str(uuid.uuid4())
-            expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
-            
-            # Guardar token en una tabla de tokens (opcional, para validación posterior)
-            # Por ahora solo retornamos el token generado              # Retornar un código de estado HTTP 200 (OK) y el token
-            mensaje = {
-                'message': 'Login exitoso',
-                'token': token,
-                'user': {
-                    'userId': user['usuario_id'],
-                    'email': user['email'],
-                    'nombre': user.get('nombre', ''),
-                    'tenantId': tenant_id
-                },
-                'expires': expires
-            }            
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps(mensaje)
-            }
-        else:
-            mensaje = {
-                'error': 'Campos requeridos: email, password, tenant_id'
-            }
-            return {
-                'statusCode': 400,
-                'body': mensaje
-            }
+        data = json.loads(event.get('body', '{}'))
+        tenant_id = data.get('tenant_id')
+        email = data.get('email')
+        password = data.get('password')
 
-    except json.JSONDecodeError:
-        mensaje = {
-            'error': 'JSON inválido'
+        if not all([tenant_id, email, password]):
+            resp = {'error': 'Faltan parámetros tenant_id, email o password'}
+            return {'statusCode': 400, 'headers': HEADERS, 'body': json.dumps(resp)}
+
+        # Verificar usuario
+        table = dynamodb.Table(USERS_TABLE)
+        existing = table.get_item(Key={'email': email, 'tenant_id': tenant_id})
+        user = existing.get('Item')
+        if not user or hash_password(password) != user.get('password'):
+            resp = {'error': 'Credenciales inválidas'}
+            return {'statusCode': 401, 'headers': HEADERS, 'body': json.dumps(resp)}
+
+        # Generar token UUID con expiración opcional
+        token = str(uuid.uuid4())
+        expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+        # Aquí podrías guardar el token en TOKENS_TABLE
+
+        resp = {
+            'message': 'Login exitoso',
+            'token': token,
+            'user': {
+                'user_id': user['user_id'],
+                'email': user['email'],
+                'nombre': user.get('nombre',''),
+                'tenant_id': tenant_id
+            },
+            'expires': expires
         }
-        return {
-            'statusCode': 400,
-            'body': mensaje
-        }
+        return {'statusCode': 200, 'headers': HEADERS, 'body': json.dumps(resp)}
+
     except Exception as e:
-        # Excepción y retornar un código de error HTTP 500
-        print("Exception:", str(e))
-        mensaje = {
-            'error': str(e)
-        }        
-        return {
-            'statusCode': 500,
-            'body': mensaje
-        }
+        resp = {'error': str(e)}
+        return {'statusCode': 500, 'headers': HEADERS, 'body': json.dumps(resp)}
