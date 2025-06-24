@@ -20,9 +20,21 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Interceptor para manejar errores de respuesta
+// Interceptor para manejar respuestas y desenvolver el body de API Gateway
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    let resData = response.data
+    // Si es un envelope con .body string, parsearlo
+    if (resData && typeof resData.body === 'string') {
+      try {
+        resData = JSON.parse(resData.body)
+      } catch (e) {
+        console.warn('No se pudo parsear response.body:', e)
+      }
+    }
+    response.data = resData
+    return response
+  },
   (error) => {
     console.error('API Error:', error)
     if (error.response?.status === 401) {

@@ -35,7 +35,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
-          integration: lambda
 
   login:
     handler: src/handlers/login_usuario.lambda_handler
@@ -53,7 +52,6 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
-          integration: lambda
 
   validarToken:
     handler: src/handlers/validar_token.lambda_handler

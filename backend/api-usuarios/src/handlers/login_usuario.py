@@ -21,7 +21,11 @@ def hash_password(password):
 
 def lambda_handler(event, context):
     try:
-        data = json.loads(event.get('body', '{}'))
+        raw_body = event.get('body', '{}')
+        if isinstance(raw_body, str):
+            data = json.loads(raw_body)
+        else:
+            data = raw_body
         tenant_id = data.get('tenant_id')
         email = data.get('email')
         password = data.get('password')
