@@ -11,7 +11,7 @@ HEADERS = {
 }
 
 dynamodb = boto3.resource('dynamodb')
-USERS_TABLE = os.environ['USERS_TABLE']
+USERS_TABLE = os.environ['USUARIOS_TABLE']
 TOKENS_TABLE = os.environ.get('TOKENS_TABLE')  # opcional
 
 # Función para hashear contraseña

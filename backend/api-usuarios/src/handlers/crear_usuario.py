@@ -42,18 +42,26 @@ def lambda_handler(event, context):
             return {'statusCode': 409, 'headers': HEADERS, 'body': json.dumps(resp)}
 
         # Crear usuario
-        user_id = str(uuid.uuid4())
+        raw_id = str(uuid.uuid4())
+        user_id = f"user_{raw_id}"
         hashed = hash_password(password)
         table.put_item(Item={
             'tenant_id': tenant_id,
-            'user_id': user_id,
+            'user_id': raw_id,
             'email': email,
             'password': hashed,
             'nombre': nombre
         })
 
-        resp = {'message': 'Usuario registrado', 'user_id': user_id}
-        return {'statusCode': 201, 'headers': HEADERS, 'body': json.dumps(resp)}
+        resp = {
+            'message': 'Usuario registrado',
+            'user_id': user_id
+        }
+        return {
+            'statusCode': 201,
+            'headers': HEADERS,
+            'body': json.dumps(resp, ensure_ascii=False, indent=2)
+        }
 
     except Exception as e:
         resp = {'error': str(e)}
