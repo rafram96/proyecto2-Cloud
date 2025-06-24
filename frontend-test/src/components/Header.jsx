@@ -22,10 +22,10 @@ function Header() {
               <>
                 <li><Link to="/login">Login</Link></li>
                 <li><Link to="/register">Registro</Link></li>
-              </>
-            ) : (
+              </>            ) : (
               <>
                 <li><Link to="/dashboard">Dashboard</Link></li>
+                <li><Link to="/auth-status">Estado Auth</Link></li>
                 <li>
                   <span>Hola, {currentUser?.nombre}</span>
                 </li>

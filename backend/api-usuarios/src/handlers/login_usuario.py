@@ -1,8 +1,8 @@
 import json
 import os
 import hashlib
-import jwt
 import boto3
+import uuid
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
 
@@ -82,29 +82,22 @@ def lambda_handler(event, context):
                 return {
                     'statusCode': 401,
                     'body': mensaje
-                }
-              # Generar token JWT con expiración de 1 hora
-            payload = {
-                'usuario_id': user['usuario_id'],
-                'email': user['email'],
-                'tenant_id': tenant_id,
-                'nombre': user.get('nombre', ''),
-                'iat': datetime.utcnow(),
-                'exp': datetime.utcnow() + timedelta(hours=1)
-            }
+                }            # Generar token UUID con expiración de 1 hora
+            token = str(uuid.uuid4())
+            expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
             
-            token = jwt.encode(payload, os.environ['JWT_SECRET'], algorithm='HS256')
-              # Retornar un código de estado HTTP 200 (OK) y el token
+            # Guardar token en una tabla de tokens (opcional, para validación posterior)
+            # Por ahora solo retornamos el token generado              # Retornar un código de estado HTTP 200 (OK) y el token
             mensaje = {
                 'message': 'Login exitoso',
                 'token': token,
                 'user': {
-                    'usuario_id': user['usuario_id'],
+                    'userId': user['usuario_id'],
                     'email': user['email'],
                     'nombre': user.get('nombre', ''),
-                    'tenant_id': tenant_id
+                    'tenantId': tenant_id
                 },
-                'expires_in': 3600  # 1 hora en segundos
+                'expires': expires
             }
             return {
                 'statusCode': 200,

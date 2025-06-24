@@ -20,7 +20,6 @@ function Register() {
       [e.target.name]: e.target.value
     })
   }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -30,20 +29,26 @@ function Register() {
     try {
       const response = await userService.register(formData)
       console.log('Registro exitoso:', response)
-      setSuccess('Usuario registrado exitosamente. Puedes iniciar sesión.')
+      setSuccess('Usuario registrado exitosamente. Iniciando sesión automáticamente...')
       
-      // Limpiar formulario
-      setFormData({
-        email: '',
-        password: '',
-        nombre: '',
-        tenant_id: ''
-      })
-
-      // Redirigir al login después de 2 segundos
-      setTimeout(() => {
-        navigate('/login')
-      }, 2000)
+      // Hacer login automático después del registro
+      setTimeout(async () => {
+        try {
+          const loginData = {
+            email: formData.email,
+            password: formData.password,
+            tenant_id: formData.tenant_id
+          }
+          await userService.login(loginData)
+          navigate('/auth-status')
+        } catch (loginError) {
+          console.error('Error en login automático:', loginError)
+          setError('Registro exitoso, pero hubo un error en el login automático. Puedes iniciar sesión manualmente.')
+          setTimeout(() => {
+            navigate('/login')
+          }, 2000)
+        }
+      }, 1500)
       
     } catch (err) {
       console.error('Error en registro:', err)

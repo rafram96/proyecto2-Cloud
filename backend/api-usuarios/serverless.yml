@@ -4,6 +4,9 @@ service: api-usuarios
 custom:
   role_id: 969784661290
 
+plugins:
+  - serverless-python-requirements
+
 provider:
   name: aws
   runtime: python3.13

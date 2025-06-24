@@ -18,7 +18,6 @@ function Login() {
       [e.target.name]: e.target.value
     })
   }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -27,7 +26,7 @@ function Login() {
     try {
       const response = await userService.login(formData)
       console.log('Login exitoso:', response)
-      navigate('/dashboard')
+      navigate('/auth-status')
     } catch (err) {
       console.error('Error en login:', err)
       setError(err.error || err.message || 'Error al iniciar sesión')

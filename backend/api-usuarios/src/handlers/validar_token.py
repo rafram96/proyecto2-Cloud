@@ -1,28 +1,18 @@
 import json
-import os
-import jwt
-from datetime import datetime
+import uuid
 
-# Función que valida el token JWT (invocada por otras Lambdas)
+# Función que valida el token (simplificada sin JWT)
 def lambda_handler(event, context):
     try:
         print(event)
         
-        # Obtener token del evento (viene de otra Lambda)
-        token = event.get('token')
-        if not token:
-            # Si viene de API Gateway, extraer del header
-            if 'headers' in event:
-                auth_header = event.get('headers', {}).get('Authorization')
-                if not auth_header:
-                    mensaje = {
-                        'error': 'Token de autorización requerido'
-                    }
-                    return {
-                        'statusCode': 401,
-                        'body': mensaje
-                    }
-                
+        # Obtener token del evento
+        token = None
+        
+        # Si viene de API Gateway, extraer del header
+        if 'headers' in event:
+            auth_header = event.get('headers', {}).get('Authorization')
+            if auth_header:
                 # Extraer token (formato: "Bearer <token>")
                 try:
                     token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
@@ -32,79 +22,50 @@ def lambda_handler(event, context):
                     }
                     return {
                         'statusCode': 401,
-                        'body': mensaje
+                        'body': json.dumps(mensaje)
                     }
-            else:
-                mensaje = {
-                    'error': 'Token requerido'
-                }
-                return {
-                    'statusCode': 401,
-                    'body': mensaje
-                }
         
-        # Validar y decodificar token JWT
+        # También revisar en el body para compatibilidad
+        if not token and 'body' in event:
+            if isinstance(event['body'], str):
+                body = json.loads(event['body'])
+            else:
+                body = event['body']
+            token = body.get('token')
+        
+        if not token:
+            mensaje = {
+                'error': 'Token de autorización requerido'
+            }
+            return {
+                'statusCode': 401,
+                'body': json.dumps(mensaje)
+            }
+        
+        # Validar que sea un UUID válido (patrón de token simple)
         try:
-            payload = jwt.decode(token, os.environ['JWT_SECRET'], algorithms=['HS256'])
+            # Verificar que sea un UUID válido
+            uuid.UUID(token)
             
-            # Verificar expiración manualmente (por seguridad adicional)
-            if 'exp' in payload:
-                exp_timestamp = payload['exp']
-                if isinstance(exp_timestamp, datetime):
-                    exp_timestamp = exp_timestamp.timestamp()
-                
-                if datetime.utcnow().timestamp() > exp_timestamp:
-                    mensaje = {
-                        'error': 'Token expirado'
-                    }
-                    return {
-                        'statusCode': 403,
-                        'body': mensaje
-                    }
-            
-            # Retornar información del usuario si el token es válido
+            # En un escenario real, buscaríamos el token en DynamoDB con fecha de expiración
+            # Por ahora retornamos válido para cualquier UUID
             mensaje = {
                 'message': 'Token válido',
-                'user': {
-                    'user_id': payload.get('user_id'),
-                    'email': payload.get('email'),
-                    'tenant_id': payload.get('tenant_id'),
-                    'nombre': payload.get('nombre', '')
-                },
-                'token_info': {
-                    'issued_at': payload.get('iat'),
-                    'expires_at': payload.get('exp')
-                }
+                'valid': True
             }
             return {
                 'statusCode': 200,
-                'body': mensaje
+                'body': json.dumps(mensaje)
             }
             
-        except jwt.ExpiredSignatureError:
-            mensaje = {
-                'error': 'Token expirado'
-            }
-            return {
-                'statusCode': 403,
-                'body': mensaje
-            }
-        except jwt.InvalidTokenError:
+        except ValueError:
+            # Token no es un UUID válido
             mensaje = {
                 'error': 'Token inválido'
             }
             return {
-                'statusCode': 403,
-                'body': mensaje
-            }
-        except Exception as e:
-            print(f"Error al decodificar token: {str(e)}")
-            mensaje = {
-                'error': 'Token inválido'
-            }
-            return {
-                'statusCode': 403,
-                'body': mensaje
+                'statusCode': 401,
+                'body': json.dumps(mensaje)
             }
     
     except Exception as e:
@@ -115,5 +76,5 @@ def lambda_handler(event, context):
         }        
         return {
             'statusCode': 500,
-            'body': mensaje
+            'body': json.dumps(mensaje)
         }

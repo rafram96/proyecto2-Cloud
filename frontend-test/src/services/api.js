@@ -6,8 +6,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Access-Control-Allow-Origin': '*',
+    'Accept': 'application/json'
   },
   timeout: 10000
 })
@@ -36,52 +35,87 @@ api.interceptors.response.use(
 )
 
 // Servicios de usuario
-export const userService = {
-  // Registro de usuario
+export const userService = {  // Registro de usuario
   register: async (userData) => {
     try {
       console.log('Enviando registro:', userData)
       const response = await api.post('/auth/registro', userData)
       console.log('Respuesta registro:', response.data)
+      
+      // Verificar si la respuesta contiene errores del backend
+      if (response.data.errorMessage || response.data.errorType) {
+        throw { error: response.data.errorMessage || 'Error en el servidor' }
+      }
+      
+      // Verificar que la respuesta tenga los datos esperados
+      if (!response.data.message || !response.data.user_id) {
+        throw { error: 'Respuesta inválida del servidor - registro no completado' }
+      }
+      
       return response.data
     } catch (error) {
       console.error('Error en registro:', error)
       if (error.code === 'ERR_NETWORK') {
         throw { error: 'Error de conexión. Verifica que la API esté funcionando.' }
       }
+      // Si ya es un error personalizado, lo pasamos tal como está
+      if (error.error) {
+        throw error
+      }
       throw error.response?.data || { error: error.message || 'Error desconocido' }
     }
   },
-
   // Login de usuario
   login: async (credentials) => {
     try {
       console.log('Enviando login:', credentials)
       const response = await api.post('/auth/login', credentials)
       console.log('Respuesta login:', response.data)
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token)
-        localStorage.setItem('userData', JSON.stringify(response.data.user))
+      
+      // Verificar si la respuesta contiene errores del backend
+      if (response.data.errorMessage || response.data.errorType) {
+        throw { error: response.data.errorMessage || 'Error en el servidor' }
       }
+      
+      // Verificar que la respuesta tenga los datos esperados
+      if (!response.data.token || !response.data.user) {
+        throw { error: 'Respuesta inválida del servidor - faltan datos de autenticación' }
+      }
+      
+      localStorage.setItem('authToken', response.data.token)
+      localStorage.setItem('userData', JSON.stringify(response.data.user))
       return response.data
     } catch (error) {
       console.error('Error en login:', error)
       if (error.code === 'ERR_NETWORK') {
         throw { error: 'Error de conexión. Verifica que la API esté funcionando.' }
       }
+      // Si ya es un error personalizado, lo pasamos tal como está
+      if (error.error) {
+        throw error
+      }
       throw error.response?.data || { error: error.message || 'Error desconocido' }
     }
   },
-
   // Validar token
   validateToken: async () => {
     try {
       const response = await api.get('/auth/validar')
+      
+      // Verificar si la respuesta contiene errores del backend
+      if (response.data.errorMessage || response.data.errorType) {
+        throw { error: response.data.errorMessage || 'Token inválido' }
+      }
+      
       return response.data
     } catch (error) {
       console.error('Error validando token:', error)
       if (error.code === 'ERR_NETWORK') {
         throw { error: 'Error de conexión. Verifica que la API esté funcionando.' }
+      }
+      // Si ya es un error personalizado, lo pasamos tal como está
+      if (error.error) {
+        throw error
       }
       throw error.response?.data || { error: error.message || 'Error desconocido' }
     }
