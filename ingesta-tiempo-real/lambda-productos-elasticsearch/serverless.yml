@@ -8,17 +8,23 @@ provider:
   region: us-east-1
   environment:
     ELASTICSEARCH_ENDPOINT: !ImportValue api-productos-${self:provider.stage}-ElasticsearchEndpoint
+    AWS_REGION: us-east-1  # Necesario para la autenticación
+  iam:
+    role: 
+      arn: arn:aws:iam::790361999801:role/LabRole 
 
 functions:
   actualizarProductos:
     handler: lambda_function.lambda_handler
-    timeout: 30
+    timeout: 60  
+    memorySize: 1024  # Más memoria para Elasticsearch
     events:
       - stream:
           type: dynamodb
           arn: !ImportValue api-productos-${self:provider.stage}-ProductosTableStreamArn
-          batchSize: 50
+          batchSize: 100  # Más eficiente con streams
           startingPosition: LATEST
+          maximumBatchingWindow: 10  # Procesar lotes cada 10 seg
 
 plugins:
   - serverless-python-requirements
@@ -26,3 +32,8 @@ plugins:
 custom:
   pythonRequirements:
     dockerizePip: true
+    useStaticCache: false  
+    slim: false
+    noDeploy: 
+      - boto3
+      - botocore
