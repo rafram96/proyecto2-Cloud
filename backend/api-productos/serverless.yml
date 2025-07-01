@@ -59,37 +59,55 @@ resources:
     ProductosTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.tableName}
+        TableName: ${self:provider.environment.PRODUCTOS_TABLE}
         AttributeDefinitions:
-          - AttributeName: codigo
-            AttributeType: S
           - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: codigo
             AttributeType: S
           - AttributeName: categoria
             AttributeType: S
         KeySchema:
-          - AttributeName: codigo
+          - AttributeName: tenant_id  # PK optimizada para multi-tenant
             KeyType: HASH
-          - AttributeName: tenant_id
+          - AttributeName: codigo     # SK
             KeyType: RANGE
         GlobalSecondaryIndexes:
-          - IndexName: TenantCategoriaIndex
+          - IndexName: CategoriaIndex
             KeySchema:
-              - AttributeName: tenant_id
-                KeyType: HASH
               - AttributeName: categoria
+                KeyType: HASH
+              - AttributeName: codigo
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
-            BillingMode: PAY_PER_REQUEST
         BillingMode: PAY_PER_REQUEST
         StreamSpecification:
-          StreamViewType: NEW_AND_OLD_IMAGES
+          StreamViewType: NEW_AND_OLD_IMAGES  # Requerido para CDC
         Tags:
           - Key: Environment
-            Value: ${self:custom.stage}
-          - Key: Service
-            Value: api-productos
+            Value: ${self:provider.stage}
+
+    ElasticsearchDomain:
+      Type: AWS::Elasticsearch::Domain
+      Properties:
+        DomainName: productos-search-${self:provider.stage}
+        ElasticsearchVersion: "7.10"
+        ElasticsearchClusterConfig:
+          InstanceType: "t3.small.elasticsearch"
+          InstanceCount: 1
+        EBSOptions:
+          EBSEnabled: true
+          VolumeType: "gp2"
+          VolumeSize: 10
+        AccessPolicies:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal: {"AWS": "*"}
+              Action: "es:*"
+              Resource: "*"
+            
 
     ProductImagesBucket:
       Type: AWS::S3::Bucket
@@ -118,3 +136,21 @@ resources:
                 - s3:GetObject
               Resource: !Sub "arn:aws:s3:::imagenes-productos-${self:provider.stage}/*"
 
+    Outputs:
+    ProductosTableName:
+      Description: "Nombre tabla productos"
+      Value: !Ref ProductosTable
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ProductosTableName
+
+    ProductosTableStreamArn:
+      Description: "ARN del Stream"
+      Value: !GetAtt ProductosTable.StreamArn
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ProductosTableStreamArn
+
+    ElasticsearchEndpoint:
+      Description: "Endpoint ES"
+      Value: !GetAtt ElasticsearchDomain.DomainEndpoint
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ElasticsearchEndpoint

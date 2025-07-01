@@ -62,21 +62,21 @@ const baseHandler = async (event, context) => {
             
             // Crear objeto producto con nueva estructura multi-tenant
             const producto = {
-                PK: pk,                            // tenant_id
-                SK: sk,                            // producto#<codigo>
-                tenant_id: tenant_id,
-                codigo: codigo,
-                nombre: nombre,
-                descripcion: descripcion,
-                precio: precio,
-                categoria: categoria,
-                stock: stock,
-                imagen_url: imagen_url,
-                tags: tags,
-                activo: true,
-                created_at: timestamp,
-                updated_at: timestamp,
-                created_by: userContext.usuario_id
+              PK: pk, // tenant_id
+              SK: sk, // producto#<codigo>
+              tenant_id: userContext.tenant_id, //PK
+              codigo: codigo,
+              nombre: nombre,
+              descripcion: descripcion,
+              precio: precio,
+              categoria: categoria,
+              stock: stock,
+              imagen_url: imagen_url,
+              tags: tags,
+              activo: true,
+              created_at: timestamp,
+              updated_at: timestamp,
+              created_by: userContext.usuario_id,
             };
 
             // Guardar en DynamoDB

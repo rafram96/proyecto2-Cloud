@@ -1,97 +1,24 @@
 org: nicolasllerenas
-service: productos-elasticsearch-ingesta
+service: productos-ingesta
 
 provider:
   name: aws
   runtime: python3.12
-  region: us-east-1
   stage: ${opt:stage, 'dev'}
-  memorySize: 512
-  timeout: 30
-  
+  region: us-east-1
   environment:
-    AWS_REGION: ${self:provider.region}
-    ELASTICSEARCH_ENDPOINT: 
-      Fn::GetAtt: [ElasticsearchDomain, DomainEndpoint]
-  
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - dynamodb:DescribeStream
-        - dynamodb:GetRecords
-        - dynamodb:GetShardIterator
-        - dynamodb:ListStreams
-      Resource: "*"
-    - Effect: Allow
-      Action:
-        - es:ESHttpPost
-        - es:ESHttpPut
-        - es:ESHttpGet
-        - es:ESHttpDelete
-        - es:ESHttpHead
-      Resource: 
-        - Fn::Sub: "${ElasticsearchDomain}/*"
-    - Effect: Allow
-      Action:
-        - logs:CreateLogGroup
-        - logs:CreateLogStream
-        - logs:PutLogEvents
-      Resource: "*"
+    ELASTICSEARCH_ENDPOINT: !ImportValue api-productos-${self:provider.stage}-ElasticsearchEndpoint
 
 functions:
   actualizarProductos:
     handler: lambda_function.lambda_handler
-    description: "Actualiza Elasticsearch cuando cambian productos en DynamoDB"
+    timeout: 30
     events:
       - stream:
           type: dynamodb
-          arn:
-            Fn::GetAtt: [ProductosTable, StreamArn]
-          batchSize: 10
+          arn: !ImportValue api-productos-${self:provider.stage}-ProductosTableStreamArn
+          batchSize: 50
           startingPosition: LATEST
-          maximumBatchingWindowInSeconds: 5
-
-resources:
-  Resources:
-    ProductosTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: productos-${self:provider.stage}
-        BillingMode: PAY_PER_REQUEST
-        StreamSpecification:
-          StreamViewType: NEW_AND_OLD_IMAGES
-        AttributeDefinitions:
-          - AttributeName: tenant_id
-            AttributeType: S
-          - AttributeName: codigo
-            AttributeType: S
-        KeySchema:
-          - AttributeName: tenant_id
-            KeyType: HASH
-          - AttributeName: codigo
-            KeyType: RANGE
-
-    ElasticsearchDomain:
-      Type: AWS::OpenSearch::Domain
-      Properties:
-        DomainName: productos-${self:provider.stage}
-        EngineVersion: OpenSearch_1.3
-        ClusterConfig:
-          InstanceType: t3.small.search
-          InstanceCount: 1
-        EBSOptions:
-          EBSEnabled: true
-          VolumeType: gp3
-          VolumeSize: 20
-        AccessPolicies:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Principal:
-                AWS: "*"
-              Action: "es:*"
-              Resource: 
-                - Fn::Sub: "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/*"
 
 plugins:
   - serverless-python-requirements
@@ -99,5 +26,3 @@ plugins:
 custom:
   pythonRequirements:
     dockerizePip: true
-    slim: true
-    strip: false

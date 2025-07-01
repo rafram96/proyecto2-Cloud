@@ -10,12 +10,28 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+def transform_dynamo_item(dynamo_item):
+    """Convierte el formato DynamoDB a un diccionario plano"""
+    transformed = {}
+    for key, value in dynamo_item.items():
+        if 'S' in value:
+            transformed[key] = value['S']
+        elif 'N' in value:
+            try:
+                transformed[key] = float(value['N'])
+            except ValueError:
+                transformed[key] = value['N']
+        elif 'BOOL' in value:
+            transformed[key] = value['BOOL']
+        elif 'L' in value:
+            transformed[key] = [item.get('S', item.get('N', '')) for item in value['L']]
+        elif 'M' in value:
+            transformed[key] = transform_dynamo_item(value['M'])
+    return transformed
+
 def get_elasticsearch_client():
-    """
-    Retorna cliente de Elasticsearch conectado a AWS OpenSearch Service
-    """
+    """Retorna cliente de Elasticsearch conectado a AWS OpenSearch Service"""
     try:
-        # Configuración de AWS OpenSearch
         host = os.environ.get('ELASTICSEARCH_ENDPOINT')
         region = os.environ.get('AWS_REGION', 'us-east-1')
         
@@ -23,7 +39,6 @@ def get_elasticsearch_client():
             logger.error("ELASTICSEARCH_ENDPOINT no configurado")
             raise ValueError("ELASTICSEARCH_ENDPOINT requerido")
         
-        # Autenticación AWS4Auth para OpenSearch
         credentials = boto3.Session().get_credentials()
         awsauth = AWS4Auth(
             credentials.access_key,
@@ -33,7 +48,6 @@ def get_elasticsearch_client():
             session_token=credentials.token
         )
         
-        # Cliente Elasticsearch
         es_client = Elasticsearch(
             hosts=[{'host': host, 'port': 443}],
             http_auth=awsauth,
@@ -45,7 +59,6 @@ def get_elasticsearch_client():
             retry_on_timeout=True
         )
         
-        # Verificar conexión
         if es_client.ping():
             logger.info("Conexión exitosa a Elasticsearch")
             return es_client
@@ -57,9 +70,7 @@ def get_elasticsearch_client():
         raise
 
 def create_index_mapping(es_client, index_name):
-    """
-    Crea el mapping del índice de productos con configuración optimizada para búsqueda
-    """
+    """Crea el mapping del índice con configuración optimizada para búsqueda"""
     mapping = {
         "settings": {
             "number_of_shards": 1,
@@ -69,17 +80,12 @@ def create_index_mapping(es_client, index_name):
                     "producto_analyzer": {
                         "type": "custom",
                         "tokenizer": "standard",
-                        "filter": [
-                            "lowercase",
-                            "spanish_stop",
-                            "spanish_stemmer",
-                            "asciifolding"
-                        ]
+                        "filter": ["lowercase", "spanish_stop", "spanish_stemmer"]
                     },
                     "autocomplete_analyzer": {
                         "type": "custom",
                         "tokenizer": "edge_ngram_tokenizer",
-                        "filter": ["lowercase", "asciifolding"]
+                        "filter": ["lowercase"]
                     }
                 },
                 "tokenizer": {
@@ -104,12 +110,10 @@ def create_index_mapping(es_client, index_name):
         },
         "mappings": {
             "properties": {
-                "codigo": {
-                    "type": "keyword"
-                },
-                "tenant_id": {
-                    "type": "keyword"
-                },
+                "PK": {"type": "keyword"},
+                "SK": {"type": "keyword"},
+                "codigo": {"type": "keyword"},
+                "tenant_id": {"type": "keyword"},
                 "nombre": {
                     "type": "text",
                     "analyzer": "producto_analyzer",
@@ -117,9 +121,6 @@ def create_index_mapping(es_client, index_name):
                         "autocomplete": {
                             "type": "text",
                             "analyzer": "autocomplete_analyzer"
-                        },
-                        "keyword": {
-                            "type": "keyword"
                         }
                     }
                 },
@@ -127,249 +128,103 @@ def create_index_mapping(es_client, index_name):
                     "type": "text",
                     "analyzer": "producto_analyzer"
                 },
-                "precio": {
-                    "type": "double"
-                },
-                "categoria": {
-                    "type": "keyword",
-                    "fields": {
-                        "text": {
-                            "type": "text",
-                            "analyzer": "producto_analyzer"
-                        }
-                    }
-                },
-                "stock": {
-                    "type": "integer"
-                },
-                "imagen_url": {
-                    "type": "keyword",
-                    "index": False
-                },
-                "tags": {
-                    "type": "keyword"
-                },
-                "activo": {
-                    "type": "boolean"
-                },
-                "created_at": {
-                    "type": "date",
-                    "format": "strict_date_optional_time||epoch_millis"
-                },
-                "updated_at": {
-                    "type": "date",
-                    "format": "strict_date_optional_time||epoch_millis"
-                },
-                "indexed_at": {
-                    "type": "date",
-                    "format": "strict_date_optional_time||epoch_millis"
-                },
-                "suggest": {
-                    "type": "completion",
-                    "analyzer": "producto_analyzer",
-                    "contexts": [
-                        {
-                            "name": "tenant_context",
-                            "type": "category"
-                        }
-                    ]
-                }
+                "precio": {"type": "float"},
+                "categoria": {"type": "keyword"},
+                "stock": {"type": "integer"},
+                "activo": {"type": "boolean"},
+                "tags": {"type": "keyword"},
+                "created_at": {"type": "date"},
+                "updated_at": {"type": "date"}
             }
         }
     }
     
     try:
-        # Verificar si el índice existe
         if not es_client.indices.exists(index=index_name):
-            # Crear índice con mapping
             es_client.indices.create(index=index_name, body=mapping)
             logger.info(f"Índice creado: {index_name}")
         else:
             logger.info(f"Índice ya existe: {index_name}")
     except Exception as e:
-        logger.error(f"Error al crear índice {index_name}: {e}")
-        raise
+        logger.error(f"Error al crear índice: {e}")
 
-def index_producto(es_client, index_name, producto, event_name):
-    """
-    Indexa un producto en Elasticsearch
-    """
+def index_product(es_client, index_name, product):
+    """Indexa un producto en Elasticsearch"""
     try:
-        # Preparar documento para indexación
-        documento = {
-            'codigo': producto.get('codigo'),
-            'tenant_id': producto.get('tenant_id'),
-            'nombre': producto.get('nombre'),
-            'descripcion': producto.get('descripcion', ''),
-            'precio': float(producto.get('precio', 0)),
-            'categoria': producto.get('categoria'),
-            'stock': int(producto.get('stock', 0)),
-            'imagen_url': producto.get('imagen_url', ''),
-            'tags': producto.get('tags', []),
-            'activo': producto.get('activo', True),
-            'created_at': producto.get('created_at'),
-            'updated_at': producto.get('updated_at'),
-            'indexed_at': datetime.now().isoformat(),
-            # Campo para autocompletado contextual
-            'suggest': {
-                'input': [
-                    producto.get('nombre', ''),
-                    producto.get('descripcion', '')[:100],  # Limitar descripción
-                    *producto.get('tags', [])
-                ],
-                'contexts': {
-                    'tenant_context': [producto.get('tenant_id')]
-                }
-            }
+        # Extraer código del SK (producto#<codigo>)
+        sk_parts = product.get('SK', '').split('#')
+        product_code = sk_parts[1] if len(sk_parts) > 1 else product.get('codigo', '')
+        
+        document = {
+            "PK": product.get('PK'),
+            "SK": product.get('SK'),
+            "codigo": product_code,
+            "tenant_id": product.get('tenant_id'),
+            "nombre": product.get('nombre'),
+            "descripcion": product.get('descripcion', ''),
+            "precio": product.get('precio', 0),
+            "categoria": product.get('categoria'),
+            "stock": product.get('stock', 0),
+            "activo": product.get('activo', False),
+            "tags": product.get('tags', []),
+            "created_at": product.get('created_at'),
+            "updated_at": product.get('updated_at')
         }
         
-        # Indexar documento
         response = es_client.index(
             index=index_name,
-            id=producto.get('codigo'),
-            body=documento,
-            refresh='wait_for'  # Esperar que el documento esté disponible para búsqueda
+            id=product.get('SK'),  # Usar SK como ID único
+            body=document,
+            refresh=True
         )
-        
-        logger.info(f"Producto indexado - Index: {index_name}, ID: {producto.get('codigo')}, Result: {response['result']}")
+        logger.info(f"Producto indexado: {response['_id']}")
         return response
-        
     except Exception as e:
-        logger.error(f"Error al indexar producto {producto.get('codigo')}: {e}")
-        raise
+        logger.error(f"Error al indexar: {e}")
 
-def delete_producto(es_client, index_name, codigo):
-    """
-    Elimina un producto de Elasticsearch
-    """
+def delete_product(es_client, index_name, product):
+    """Elimina un producto de Elasticsearch"""
     try:
         response = es_client.delete(
             index=index_name,
-            id=codigo,
-            refresh='wait_for'
+            id=product.get('SK'),
+            refresh=True
         )
-        logger.info(f"Producto eliminado - Index: {index_name}, ID: {codigo}")
+        logger.info(f"Producto eliminado: {response['_id']}")
         return response
     except Exception as e:
-        if "not_found" in str(e).lower():
-            logger.warning(f"Producto {codigo} no encontrado para eliminar")
-            return {"result": "not_found"}
-        else:
-            logger.error(f"Error al eliminar producto {codigo}: {e}")
-            raise
+        logger.error(f"Error al eliminar: {e}")
 
 def lambda_handler(event, context):
-    """
-    Función principal que procesa eventos de DynamoDB Streams
-    """
+    """Procesa eventos de DynamoDB Streams"""
     try:
-        logger.info(f"Procesando {len(event['Records'])} records de DynamoDB Stream")
-        
-        # Obtener cliente de Elasticsearch
+        logger.info(f"Eventos recibidos: {len(event['Records'])}")
         es_client = get_elasticsearch_client()
         
-        resultados = []
-        
-        # Procesar cada record del stream
         for record in event['Records']:
-            try:
-                event_name = record['eventName']  # INSERT, MODIFY, REMOVE
-                logger.info(f"Procesando evento: {event_name}")
-                
-                if event_name in ['INSERT', 'MODIFY']:
-                    # Procesar inserción o modificación
-                    if 'NewImage' in record['dynamodb']:
-                        new_image = record['dynamodb']['NewImage']
-                        
-                        # Convertir DynamoDB format a Python dict
-                        producto = {}
-                        for key, value in new_image.items():
-                            if 'S' in value:  # String
-                                producto[key] = value['S']
-                            elif 'N' in value:  # Number
-                                producto[key] = float(value['N'])
-                            elif 'BOOL' in value:  # Boolean
-                                producto[key] = value['BOOL']
-                            elif 'L' in value:  # List
-                                producto[key] = [item.get('S', item.get('N', '')) for item in value['L']]
-                        
-                        # Solo indexar productos activos
-                        if producto.get('activo', False):
-                            tenant_id = producto.get('tenant_id')
-                            if tenant_id:
-                                # Crear nombre del índice por tenant (multi-tenancy)
-                                index_name = f"productos_{tenant_id.lower()}"
-                                
-                                # Crear índice si no existe
-                                create_index_mapping(es_client, index_name)
-                                
-                                # Indexar producto
-                                response = index_producto(es_client, index_name, producto, event_name)
-                                resultados.append({
-                                    'event': event_name,
-                                    'producto_id': producto.get('codigo'),
-                                    'result': response['result'],
-                                    'successful': True
-                                })
-                            else:
-                                logger.warning("Producto sin tenant_id, saltando...")
-                        else:
-                            logger.info(f"Producto {producto.get('codigo')} inactivo, no indexado")
-                
-                elif event_name == 'REMOVE':
-                    # Procesar eliminación
-                    if 'OldImage' in record['dynamodb']:
-                        old_image = record['dynamodb']['OldImage']
-                        codigo = old_image.get('codigo', {}).get('S')
-                        tenant_id = old_image.get('tenant_id', {}).get('S')
-                        
-                        if codigo and tenant_id:
-                            index_name = f"productos_{tenant_id.lower()}"
-                            
-                            # Eliminar producto de Elasticsearch
-                            response = delete_producto(es_client, index_name, codigo)
-                            resultados.append({
-                                'event': event_name,
-                                'producto_id': codigo,
-                                'result': response.get('result', 'deleted'),
-                                'successful': True
-                            })
-                        else:
-                            logger.warning("Datos incompletos para eliminación")
+            event_name = record['eventName']
             
-            except Exception as record_error:
-                logger.error(f"Error procesando record: {record_error}")
-                resultados.append({
-                    'event': record.get('eventName', 'unknown'),
-                    'successful': False,
-                    'error': str(record_error)
-                })
-                # Continuar procesando otros records
-                continue
+            if event_name in ['INSERT', 'MODIFY']:
+                new_image = record['dynamodb'].get('NewImage', {})
+                product = transform_dynamo_item(new_image)
+                
+                if product.get('activo') and 'producto#' in product.get('SK', ''):
+                    tenant_id = product.get('PK')  # PK = tenant_id
+                    index_name = f"productos_{tenant_id}"
+                    create_index_mapping(es_client, index_name)
+                    index_product(es_client, index_name, product)
+                
+            elif event_name == 'REMOVE':
+                old_image = record['dynamodb'].get('OldImage', {})
+                product = transform_dynamo_item(old_image)
+                
+                if 'producto#' in product.get('SK', ''):
+                    tenant_id = product.get('PK')
+                    index_name = f"productos_{tenant_id}"
+                    delete_product(es_client, index_name, product)
         
-        # Resumen de resultados
-        exitosos = len([r for r in resultados if r.get('successful')])
-        errores = len(resultados) - exitosos
-        
-        logger.info(f"Procesamiento completado - Exitosos: {exitosos}, Errores: {errores}")
-        
-        return {
-            'statusCode': 200,
-            'body': {
-                'message': 'Productos procesados exitosamente en Elasticsearch',
-                'records_processed': len(event['Records']),
-                'successful': exitosos,
-                'errors': errores,
-                'results': resultados
-            }
-        }
-        
+        return {'statusCode': 200, 'body': 'Procesamiento exitoso'}
+    
     except Exception as e:
-        logger.error(f"Error crítico en lambda_handler: {e}")
-        return {
-            'statusCode': 500,
-            'body': {
-                'error': str(e),
-                'message': 'Error procesando stream de productos'
-            }
-        }
+        logger.error(f"Error en handler: {e}")
+        return {'statusCode': 500, 'body': str(e)}
