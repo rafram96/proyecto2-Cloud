@@ -18,9 +18,10 @@ const Navbar: React.FC = () => {
         <div className="font-rubik text-xl cursor-pointer text-secondary" onClick={handleHome}>
           ELEKTRA
         </div>
-      </button>      <div className="flex gap-8 items-center">
+      </button>      
+      <div className="flex gap-8 items-center">
         <span className="font-jaldi text-[16px] text-secondary">
-          {user?.email} ({user?.tenantId})
+          {user?.email} {user?.tenantId}
         </span>
         <button onClick={handleOrders} className="font-jaldi text-[20px] bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300">
           My Orders
