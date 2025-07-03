@@ -1,14 +1,35 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+
+type LoginResult = {
+  success: boolean;
+  error?: string;
+  data?: any;
+};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const { login } = useAuth();
+  const [credentials, setCredentials] = useState({ email: "", password: "", tenant_id: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   
+    if (!credentials.email || !credentials.password || !credentials.tenant_id) {
+      setError("Rellenar todos los campos.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const result = await login(credentials) as LoginResult;
+    if (result.success) {
+      navigate("/");
+    } else {
+      setError(result.error || "Error en login");
+    }
+    setLoading(false);
   };
 
   return (
@@ -54,10 +75,11 @@ const Login: React.FC = () => {
                           password: e.target.value,
                         })
                       }
-                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
-                      placeholder="Enter your password"
-                      type="password"
-                    />
+                     className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
+                     placeholder="Enter your password"
+                     type="password"
+                     required
+                   />
                   </div>
                 </div>
                 <div className="mb-3">
@@ -66,11 +88,14 @@ const Login: React.FC = () => {
                   </label>
                   <div className="flex items-center justify-center">
                     <input
-                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D] "
+                      value={credentials.tenant_id}
+                      onChange={(e) => setCredentials({ ...credentials, tenant_id: e.target.value })}
+                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
                       placeholder="Enter your tenant ID"
-                      type="tenant_id"
-                    />
-                  </div>
+                      type="text"
+                       required
+                     />
+                   </div>
                 </div>
 
                 {error && (
@@ -80,9 +105,10 @@ const Login: React.FC = () => {
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    className="pb-8 font-koulen text-[30px] bg-transparent border-none outline-none text-amarillo3 hover:underline transition duration-200"
+                    disabled={loading}
+                    className="pb-8 font-koulen text-[30px] bg-transparent border-none outline-none text-amarillo3 hover:underline transition duration-200 disabled:opacity-50"
                   >
-                    LOGIN
+                    {loading ? "LOGGING IN..." : "LOGIN"}
                   </button>
                 </div>
               </div>

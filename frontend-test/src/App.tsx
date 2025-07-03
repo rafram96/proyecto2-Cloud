@@ -9,6 +9,8 @@ import {
 
 import Navbar   from './components/Navbar';
 import NavbarA  from './components/NavbarA';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import Home     from './pages/Home';
 import Login    from './pages/Login';
@@ -32,13 +34,35 @@ const AppLayout: React.FC = () => {
 
       <div className="pt-16">
         <Routes>
-          <Route path="/"        element={<Home />} />
-          <Route path="/cart"    element={<Cart />} />
-          <Route path="/orders"  element={<Orders />} />
-          <Route path="/product/:id" element={<Product />} />
-          <Route path="/search"  element={<Search />} />
           <Route path="/login"   element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Rutas protegidas */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          } />
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          } />
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          } />
+          <Route path="/product/:id" element={
+            <ProtectedRoute>
+              <Product />
+            </ProtectedRoute>
+          } />
+          <Route path="/search" element={
+            <ProtectedRoute>
+              <Search />
+            </ProtectedRoute>
+          } />
         </Routes>
       </div>
     </div>
@@ -48,7 +72,9 @@ const AppLayout: React.FC = () => {
 export default function App() {
   return (
     <Router>
-      <AppLayout />
+      <AuthProvider>
+        <AppLayout />
+      </AuthProvider>
     </Router>
   );
 }

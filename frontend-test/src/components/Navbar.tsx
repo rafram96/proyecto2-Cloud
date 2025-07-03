@@ -1,37 +1,28 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleHome = () => navigate('/');
   const handleCart = () => navigate('/cart');
   const handleOrders = () => navigate('/orders');
-  const handleLogin = () => navigate('/login');
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className=" bg-[#000000] fixed inset-x-0 top-0 h-16 px-8 flex items-center justify-between text-2xl  w-full z-50">
       
-      <button
-          onClick={handleHome}
-          className="relative bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300"
-        >
+      <button onClick={handleHome} className="relative bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300">
         <div className="font-rubik text-xl cursor-pointer text-secondary" onClick={handleHome}>
           ELEKTRA
         </div>
-      </button>
-
-      <div className="flex gap-8">
-        <button
-          onClick={handleLogin}
-          className="font-jaldi text-[20px] bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300"
-        >
-          Account
-        </button>
-        <button
-          onClick={handleOrders}
-          className="font-jaldi text-[20px] bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300"
-        >
+      </button>      <div className="flex gap-8 items-center">
+        <span className="font-jaldi text-[16px] text-secondary">
+          {user?.email} ({user?.tenantId})
+        </span>
+        <button onClick={handleOrders} className="font-jaldi text-[20px] bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300">
           My Orders
         </button>
         <button
@@ -61,7 +52,9 @@ const Navbar: React.FC = () => {
             2
           </div>
         </button>
-
+        <button onClick={handleLogout} className="font-jaldi text-[20px] bg-transparent border-none outline-none text-secondary hover:text-[#FFF0AD] transition duration-300">
+          Logout
+        </button>
       </div>
     </div>
   );
