@@ -37,7 +37,7 @@ const Home: React.FC = () => {
   backgroundImage: `url(${imagen1})`, backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '600px',}}>
     <div className="absolute inset-0 bg-black opacity-50"></div>
     <div className="relative z-10 flex flex-col items-center justify-center h-full">
-      <h1 className="font-koulen font-bold text-[128px] text-[#FCF7D5] ">Up to 30% off laptops</h1> 
+      <h1 className="font-koulen mt-40 font-bold text-[128px] text-white ">Up to 30% off laptops</h1> 
       <ShopNowButton />
     </div>
         </section>

@@ -101,6 +101,11 @@
   font-weight: 900;
   font-style: italic;
 }
+.jomhuria-regular {
+  font-family: "Jomhuria", serif;
+  font-weight: 400;
+  font-style: normal;
+}
 @layer base {
   html, body {
     margin: 0;

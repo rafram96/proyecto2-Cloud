@@ -12,7 +12,8 @@ module.exports = {
         koulen:    ['"Koulen"',     'sans-serif'],
         jaldi:     ['"Jaldi"',      'sans-serif'],
         lato:      ['"Lato"',       'sans-serif'],
-        rubik:     ['"Rubik Glitch"','system-ui']
+        rubik:     ['"Rubik Glitch"','system-ui'],
+        jomhuria:  ['jomhuria',    'serif']
       },
       colors: {
         primary:    '#000000',

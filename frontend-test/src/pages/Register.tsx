@@ -28,18 +28,18 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center h-[800px] bg-black">
       <div className="flex justify-center items-center w-full">
         <div className="w-[1100px] flex items-center justify-center">
           <form
             onSubmit={handleSubmit}
             className="flex flex-col lg:flex-row items-start gap-20 justify-center"
           >
-            <h1 className="font-koulen font-bold text-left text-[57px] text-[#FCF7D5] m-0 p-0">
+            <h1 className="font-koulen font-bold text-left text-[57px] text-[#FCF7D5] mt-[15%] m-0 p-0">
               Your Smart <br /> Tech <br />
               Journey <br /> Starts Here.
             </h1>
-            <div className="w-px h-80 mx-4 bg-white"></div>
+            <div className=" mt-[15%] w-px h-80 mx-4 bg-white"></div>
             <section className="text-left">
               <h1 className="font-koulen font-bold text-center text-[48px] text-white">
                 Create An Account

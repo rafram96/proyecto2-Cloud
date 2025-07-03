@@ -33,7 +33,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-black">
+    <div className="flex justify-center items-center h-[800px] bg-black">
       <div className="flex w-full justify-center">
         <div className="w-[650px] flex items-center justify-center">
             <form onSubmit={handleSubmit}>
@@ -99,14 +99,14 @@ const Login: React.FC = () => {
                 </div>
 
                 {error && (
-                  <p className="text-red-500 font-Judson text-center mb-4">{error}</p>
+                  <p className="text-red-500 font-Judson text-center mb-6">{error}</p>
                 )}
 
                 <div className="flex justify-center">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="pb-8 font-koulen text-[30px] bg-transparent border-none outline-none text-amarillo3 hover:underline transition duration-200 disabled:opacity-50"
+                    className="pb-8 mt-4 font-koulen text-[30px] bg-transparent border-none outline-none text-amarillo3 hover:underline transition duration-200 disabled:opacity-50"
                   >
                     {loading ? "LOGGING IN..." : "LOGIN"}
                   </button>

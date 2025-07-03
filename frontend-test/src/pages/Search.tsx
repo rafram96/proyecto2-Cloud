@@ -159,7 +159,7 @@ const Search: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [products] = useState<Product[]>(mockProducts);
   
-  const productsPerPage = 12;
+  const productsPerPage = 16;
 
   // Filtrar productos
   const filteredProducts = useMemo(() => {
@@ -201,9 +201,9 @@ const Search: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="w-[100%] max-w-none mx-auto px-7">
       {/* Header con buscador */}
-      <div className="bg-white mt-4 ">
+      <div className="bg-white mt-7 ">
         <div className="max-w-7xl mx-auto px-4 py-2">
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
             <div className="relative">
@@ -244,7 +244,7 @@ const Search: React.FC = () => {
           </div>
           <div className="w-95 h-px bg-amarillo1 mb-2"></div>
           {/* Grid de productos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8 ">
             {paginatedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
