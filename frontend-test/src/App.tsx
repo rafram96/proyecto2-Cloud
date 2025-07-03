@@ -19,6 +19,8 @@ import Cart     from './pages/Mycart';
 import Orders   from './pages/Myorders';
 import Product  from './pages/Product';
 import Search   from './pages/Search';
+import CreateProduct from './pages/CreateProduct';
+import ViewOrder from './pages/ViewOrder';
 
 const AppLayout: React.FC = () => {
   const { pathname } = useLocation();
@@ -36,7 +38,8 @@ const AppLayout: React.FC = () => {
         <Routes>
           <Route path="/login"   element={<Login />} />
           <Route path="/register" element={<Register />} />
-
+          <Route path="/crear-producto" element={<CreateProduct />} />
+          <Route path="/ver-orden" element={<ViewOrder />} />
           {/* Rutas protegidas */}
           <Route path="/" element={
             <ProtectedRoute>
