@@ -11,7 +11,6 @@ const api = axios.create({
   timeout: 10000
 })
 
-// Interceptor para agregar token de autorización
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken')
   if (token) {
@@ -20,11 +19,10 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Interceptor para manejar respuestas y desenvolver el body de API Gateway
+
 api.interceptors.response.use(
   (response) => {
     let resData = response.data
-    // Si es un envelope con .body string, parsearlo
     if (resData && typeof resData.body === 'string') {
       try {
         resData = JSON.parse(resData.body)
@@ -38,7 +36,6 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error)
     if (error.response?.status === 401) {
-      // Token expirado o inválido
       userService.logout()
       window.location.href = '/login'
     }
@@ -46,8 +43,7 @@ api.interceptors.response.use(
   }
 )
 
-// Servicios de usuario
-export const userService = {  // Registro de usuario
+export const userService = {
   register: async (userData) => {
     try {
       console.log('Enviando registro:', userData)

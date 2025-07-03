@@ -25,6 +25,7 @@ function Header() {
               </>            ) : (
               <>
                 <li><Link to="/dashboard">Dashboard</Link></li>
+                <li><Link to="/products">Productos</Link></li>
                 <li><Link to="/auth-status">Estado Auth</Link></li>
                 <li>
                   <span>Hola, {currentUser?.nombre}</span>
