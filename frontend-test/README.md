@@ -1,75 +1,69 @@
-# Frontend Test para API Usuarios
+# React + TypeScript + Vite
 
-Frontend básico con Vite + React para probar la API de usuarios.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Estructura del proyecto
+Currently, two official plugins are available:
 
-```
-frontend-test/
-├── src/
-│   ├── components/     # Componentes reutilizables
-│   │   └── Header.jsx
-│   ├── pages/         # Páginas de la aplicación
-│   │   ├── Login.jsx
-│   │   ├── Register.jsx
-│   │   └── Dashboard.jsx
-│   ├── services/      # Servicios para API
-│   │   └── api.js
-│   ├── assets/        # CSS y recursos estáticos
-│   │   └── index.css
-│   ├── App.jsx
-│   └── main.jsx
-├── .env               # Variables de entorno
-├── package.json
-└── vite.config.js
-```
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Instalación y uso
+## Expanding the ESLint configuration
 
-1. Instalar dependencias:
-```bash
-npm install
-```
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-2. Configurar la URL de la API en `.env`:
-```
-VITE_API_BASE_URL=http://dominio.com/dev
-```
+```js
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-3. Ejecutar en modo desarrollo:
-```bash
-npm run dev
+      // Remove tseslint.configs.recommended and replace with this
+      ...tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      ...tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      ...tseslint.configs.stylisticTypeChecked,
+
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-4. Abrir en el navegador: http://localhost:3000
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## Funcionalidades implementadas
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-- ✅ **Registro de usuarios** (`/register`)
-- ✅ **Login de usuarios** (`/login`) 
-- ✅ **Dashboard con validación de token** (`/dashboard`)
-- ✅ **Header con navegación y logout**
-- ✅ **Manejo de errores y estados de carga**
-- ✅ **Almacenamiento de token en localStorage**
-
-## Endpoints probados
-
-- `POST /usuarios/crear` - Registro
-- `POST /usuarios/login` - Login  
-- `GET /usuarios/validar` - Validación de token
-
-## Variables de entorno
-
-El archivo `.env` debe contener:
+export default tseslint.config([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-VITE_API_BASE_URL=http://dominio.com/dev
-```
-
-Si tu API está en `http://dominio.com/dev/usuarios/login`, la variable debe ser `http://dominio.com/dev` (sin la ruta específica del endpoint).
-
-## Próximas funcionalidades
-
-- 🚧 Crear usuarios admin
-- 🚧 Gestión de tenants  
-- 🚧 Integración con API de productos
-- 🚧 Mejoras en UI/UX
