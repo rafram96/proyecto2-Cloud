@@ -1,19 +1,19 @@
 const { v4: uuidv4 } = require('uuid');
-const { validateJWT, createResponse, requireAuth } = require('../utils/auth');
-const { createItem, getTable } = require('../utils/dynamodb');
+const { createResponse, requireAuth } = require('../utils/auth');
+const { getTable, createItem } = require('../utils/dynamodb');
+
+/**
+ * @typedef {import('../utils/types').Product} Product
+ * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
+ */
 
 // CREAR PRODUCTO
 const baseHandler = async (event, context) => {
     try {
         console.log(event);
         
-        // Validar token JWT invocando Lambda ValidarTokenAcceso
-        const userContext = await validateJWT(event);
-        if (userContext.error) {
-            return createResponse(403, {
-                'status': 'Forbidden - Acceso No Autorizado'
-            });
-        }
+        // userContext inyectado por requireAuth
+        const userContext = event.userContext;
 
         // Manejar el caso en que body sea string o diccionario
         let body;

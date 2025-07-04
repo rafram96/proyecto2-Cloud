@@ -1,104 +1,94 @@
-const { validateJWT, createResponse, requireAuth } = require('../utils/auth');
-const { scanItems, getTable } = require('../utils/dynamodb');
+const { createResponse, requireAuth } = require('../utils/auth');
+const { getTable } = require('../utils/dynamodb');
+
+/**
+ * @typedef {import('../utils/types').Product} Product
+ * @typedef {import('../utils/types').ApiResponse<{ items: Product[]; pagination: any; count: number; }>} ApiResponseList
+ */
 
 // LISTAR PRODUCTOS
 const baseHandler = async (event, context) => {
     try {
         console.log(event);
         
-        // Validar token JWT invocando Lambda ValidarTokenAcceso
-        const userContext = await validateJWT(event);
-        if (userContext.error) {
-            return createResponse(403, {
-                'status': 'Forbidden - Acceso No Autorizado'
-            });
-        }        // Obtener parámetros de query para paginación
-        const urlQueryParams = event.queryStringParameters || {};
-        const limit = parseInt(urlQueryParams.limit) || 10;
-        const lastKey = urlQueryParams.lastKey ? JSON.parse(decodeURIComponent(urlQueryParams.lastKey)) : undefined;
-        const categoria = urlQueryParams.categoria;
-        const busqueda = urlQueryParams.busqueda;
+        // userContext inyectado por requireAuth
+        const userContext = event.userContext;
+     // Obtener parámetros de query para paginación
+     const urlQueryParams = event.queryStringParameters || {};
+    const limit = parseInt(urlQueryParams.limit) || 10;
+    const lastKey = urlQueryParams.lastKey ? JSON.parse(decodeURIComponent(urlQueryParams.lastKey)) : undefined;
+     const categoria = urlQueryParams.categoria;
+     const busqueda = urlQueryParams.busqueda;
 
-        // Validar límite de paginación
-        if (limit > 100) {
-            return createResponse(400, {
-                'error': 'El límite máximo es 100 productos por página'
-            });
-        }        // Conectar DynamoDB
-        const table = getTable(process.env.PRODUCTOS_TABLE);
+     // Validar límite de paginación
+     if (limit > 100) {
+        return createResponse(400, { success: false, error: 'El límite máximo es 100 productos por página' });
+     }        // Conectar DynamoDB
+     const table = getTable(process.env.PRODUCTOS_TABLE);
 
-        // Usar Query con nueva estructura: PK = tenant_id, SK = producto#<codigo>
-        const queryParams = {
-            KeyConditionExpression: 'PK = :tenant_id AND begins_with(SK, :producto_prefix)',
-            ExpressionAttributeValues: {
-                ':tenant_id': userContext.tenant_id,
-                ':producto_prefix': 'producto#',
-                ':activo': true
-            },
-            FilterExpression: 'activo = :activo',
-            Limit: limit
-        };
+     // Usar Query con nueva estructura: PK = tenant_id, SK = producto#<codigo>
+     const queryParams = {
+         KeyConditionExpression: 'PK = :tenant_id AND begins_with(SK, :prefix)',
+         ExpressionAttributeValues: {
+             ':tenant_id': userContext.tenant_id,
+             ':prefix': 'producto#',
+             ':activo': true
+         },
+         FilterExpression: 'activo = :activo',
+         Limit: limit
+     };
 
-        // Filtro por categoría
-        if (categoria) {
-            queryParams.FilterExpression += ' AND categoria = :categoria';
-            queryParams.ExpressionAttributeValues[':categoria'] = categoria;
-        }
+     // Filtro por categoría
+     if (categoria) {
+         queryParams.FilterExpression += ' AND categoria = :categoria';
+         queryParams.ExpressionAttributeValues[':categoria'] = categoria;
+     }
 
-        // Filtro por búsqueda (en nombre o descripción)
-        if (busqueda) {
-            queryParams.FilterExpression += ' AND (contains(#nombre, :busqueda) OR contains(descripcion, :busqueda))';
-            queryParams.ExpressionAttributeNames = {
-                '#nombre': 'nombre'
-            };            queryParams.ExpressionAttributeValues[':busqueda'] = busqueda;
-        }
+     // Filtro por búsqueda (en nombre o descripción)
+     if (busqueda) {
+         queryParams.FilterExpression += ' AND (contains(#nombre, :busqueda) OR contains(descripcion, :busqueda))';
+         queryParams.ExpressionAttributeNames = { '#nombre': 'nombre' };
+         queryParams.ExpressionAttributeValues[':busqueda'] = busqueda;
+     }
 
-        // Agregar lastKey para paginación
-        if (lastKey) {
-            queryParams.ExclusiveStartKey = lastKey;
-        }
+     // Agregar lastKey para paginación
+     if (lastKey) {
+         queryParams.ExclusiveStartKey = lastKey;
+     }
 
-        // Ejecutar query
-        const result = await table.query(queryParams).promise();
+    const result = await table.query(queryParams).promise();
 
-        if (result.error) {
-            return createResponse(500, {
-                'error': result.error
-            });
-        }
+    // Formatear respuesta
+     const productos = result.Items.map(producto => ({
+         codigo: producto.codigo,
+         nombre: producto.nombre,
+         descripcion: producto.descripcion,
+         precio: producto.precio,
+         categoria: producto.categoria,
+         stock: producto.stock,
+         imagen_url: producto.imagen_url,
+         tags: producto.tags || [],
+        created_at: producto.created_at,
+        updated_at: producto.updated_at,
+        created_by: producto.created_by,
+        updated_by: producto.updated_by
+     }));
 
-        // Formatear productos para respuesta
-        const productos = result.Items.map(producto => ({
-            codigo: producto.codigo,
-            nombre: producto.nombre,
-            descripcion: producto.descripcion,
-            precio: producto.precio,
-            categoria: producto.categoria,
-            stock: producto.stock,
-            imagen_url: producto.imagen_url,
-            tags: producto.tags || [],
-            created_at: producto.created_at,
-            updated_at: producto.updated_at,
-            created_by: producto.created_by,
-            updated_by: producto.updated_by
-        }));
-
-        // Preparar respuesta con información de paginación
-        const response = {
-            productos: productos,
+    const response = {
+        success: true,
+        data: {
+            items: productos,
             count: productos.length,
             pagination: {
-                limit: limit,
-                hasMore: !!result.data.LastEvaluatedKey
+                limit,
+                hasMore: !!result.LastEvaluatedKey,
+                nextKey: result.LastEvaluatedKey ? encodeURIComponent(JSON.stringify(result.LastEvaluatedKey)) : undefined
             }
-        };
-
-        // Agregar nextKey si hay más elementos
-        if (result.data.LastEvaluatedKey) {
-            response.pagination.nextKey = encodeURIComponent(JSON.stringify(result.data.LastEvaluatedKey));
         }
+    };
 
-        return createResponse(200, response);
+     // Retornar respuesta uniforme
+     return createResponse(200, response);
 
     } catch (error) {
         // Excepción y retornar un código de error HTTP 500

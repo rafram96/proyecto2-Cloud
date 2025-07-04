@@ -1,14 +1,20 @@
 const { createResponse, requireAuth } = require('../utils/auth');
 const { updateItem, getItem, getTable } = require('../utils/dynamodb');
 
+/**
+ * @typedef {import('../utils/types').Product} Product
+ * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
+ */
+
 const baseHandler = async (event, context) => {
     try {
+        // userContext inyectado por requireAuth
         const userContext = event.userContext;
 
         // Obtener código del producto de los path parameters
         const codigo = event.pathParameters?.codigo;
         if (!codigo) {
-            return createResponse(400, { error: 'Código del producto requerido' });
+            return createResponse(400, { success: false, error: 'Código del producto requerido' });
         }
 
         // Parsear el body
@@ -19,28 +25,28 @@ const baseHandler = async (event, context) => {
         const camposEnviados = Object.keys(body).filter(key => camposPermitidos.includes(key));
 
         if (camposEnviados.length === 0) {
-            return createResponse(400, { error: 'Debe enviar al menos un campo válido para actualizar' });
+            return createResponse(400, { success: false, error: 'Debe enviar al menos un campo válido para actualizar' });
         }
 
         const table = getTable(process.env.PRODUCTOS_TABLE);
 
         // Verificar que el producto existe y pertenece al tenant
         const key = {
-            codigo: codigo,
-            tenant_id: userContext.tenant_id
+            PK: userContext.tenant_id,
+            SK: `producto#${codigo}`
         };
 
         const existingProduct = await getItem(table, key);
         if (existingProduct.error) {
-            return createResponse(500, { error: existingProduct.error });
+            return createResponse(500, { success: false, error: existingProduct.error });
         }
 
         if (!existingProduct.data) {
-            return createResponse(404, { error: 'Producto no encontrado' });
+            return createResponse(404, { success: false, error: 'Producto no encontrado' });
         }
 
         if (!existingProduct.data.activo) {
-            return createResponse(400, { error: 'No se puede actualizar un producto inactivo' });
+            return createResponse(400, { success: false, error: 'No se puede actualizar un producto inactivo' });
         }
 
         // Validar tipos de datos si se proporcionan
@@ -73,13 +79,13 @@ const baseHandler = async (event, context) => {
         const updateResult = await updateItem(table, key, updateExpression, expressionAttributeValues);
 
         if (updateResult.error) {
-            return createResponse(500, { error: updateResult.error });
+            return createResponse(500, { success: false, error: updateResult.error });
         }
 
         // Obtener el producto actualizado
         const updatedProduct = await getItem(table, key);
         if (updatedProduct.error) {
-            return createResponse(500, { error: updatedProduct.error });
+            return createResponse(500, { success: false, error: updatedProduct.error });
         }
 
         const producto = updatedProduct.data;
@@ -98,19 +104,17 @@ const baseHandler = async (event, context) => {
             updated_by: producto.updated_by
         };
 
-        return createResponse(200, {
-            message: 'Producto actualizado exitosamente',
-            producto: productoFormatted
-        });
+        // Respuesta uniforme
+        return createResponse(200, { success: true, data: productoFormatted });
 
     } catch (error) {
         console.error('Error al actualizar producto:', error);
         
         if (error instanceof SyntaxError) {
-            return createResponse(400, { error: 'JSON inválido' });
+            return createResponse(400, { success: false, error: 'JSON inválido' });
         }
         
-        return createResponse(500, { error: 'Error interno del servidor' });
+        return createResponse(500, { success: false, error: 'Error interno del servidor' });
     }
 };
 // Proteger endpoint con JWT

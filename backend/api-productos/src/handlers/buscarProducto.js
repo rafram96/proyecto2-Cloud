@@ -1,18 +1,18 @@
-const { validateJWT, createResponse, requireAuth } = require('../utils/auth');
+const { createResponse, requireAuth } = require('../utils/auth');
 const { getItem, getTable } = require('../utils/dynamodb');
+
+/**
+ * @typedef {import('../utils/types').Product} Product
+ * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
+ */
 
 // BUSCAR PRODUCTO
 const baseHandler = async (event, context) => {
     try {
         console.log(event);
         
-        // Validar token JWT invocando Lambda ValidarTokenAcceso
-        const userContext = await validateJWT(event);
-        if (userContext.error) {
-            return createResponse(403, {
-                'status': 'Forbidden - Acceso No Autorizado'
-            });
-        }
+        // userContext inyectado por requireAuth
+        const userContext = event.userContext;
 
         // Manejar el caso en que body sea string o diccionario
         let body;
@@ -22,7 +22,8 @@ const baseHandler = async (event, context) => {
             body = event['body'];
         }
         
-        const tenant_id = body['tenant_id'];
+        // Forzar multi-tenant: siempre usar tenant_id del contexto
+        const tenant_id = userContext.tenant_id;
         const codigo = body['codigo'] || event.pathParameters?.codigo;
         
         if (!codigo) {
@@ -59,7 +60,8 @@ const baseHandler = async (event, context) => {
         // Verificar que el producto esté activo
         if (!producto.activo) {
             return createResponse(404, {
-                'status': 'Producto no disponible'
+                success: false,
+                error: 'Producto no disponible'
             });
         }
 
@@ -79,7 +81,11 @@ const baseHandler = async (event, context) => {
             created_by: producto.created_by,
             updated_by: producto.updated_by
         };
-        return createResponse(200, { producto: productoFormatted });
+        // Respuesta uniforme
+        return createResponse(200, {
+            success: true,
+            data: productoFormatted
+        });
 
     } catch (error) {
         // Excepción y retornar un código de error HTTP 500
