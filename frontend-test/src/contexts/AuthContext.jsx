@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { userService } from '../services/api';
+import { authService } from '../services/authService';
 
 /**
  * @typedef {Object} User
@@ -10,12 +10,19 @@ import { userService } from '../services/api';
  */
 
 /**
+ * @typedef {Object} ApiResult
+ * @property {boolean} success
+ * @property {Object} [data]
+ * @property {string} [error]
+ */
+
+/**
  * @typedef {Object} AuthContextType
  * @property {User|null} user
  * @property {boolean} isAuthenticated
  * @property {boolean} isLoading
- * @property {function(Object):Promise<Object>} login
- * @property {function(Object):Promise<Object>} register
+ * @property {function(Object):Promise<ApiResult>} login
+ * @property {function(Object):Promise<ApiResult>} register
  * @property {function():void} logout
  */
 
@@ -38,11 +45,11 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = userService.getToken();
+      const token = authService.getToken();
       if (token) {
-        const result = await userService.validateToken();
+        const result = await authService.validateToken();
         if (result.success) {
-          const currentUser = userService.getCurrentUser();
+          const currentUser = authService.getCurrentUser();
           // Si el usuario en localStorage no tiene los campos mapeados, remapearlo
           if (currentUser && currentUser.user_id) {
             const userMapped = {
@@ -57,7 +64,7 @@ export function AuthProvider({ children }) {
             setUser(currentUser);
           }
         } else {
-          userService.logout();
+          authService.logout();
         }
       }
       setIsLoading(false);
@@ -67,7 +74,7 @@ export function AuthProvider({ children }) {
 
   const login = async (credentials) => {
     setIsLoading(true);
-    const result = await userService.login(credentials);
+    const result = await authService.login(credentials);
     if (result.success) {
       // Mapear campos del backend a frontend
       const userMapped = {
@@ -86,13 +93,13 @@ export function AuthProvider({ children }) {
 
   const register = async (userData) => {
     setIsLoading(true);
-    const result = await userService.register(userData);
+    const result = await authService.register(userData);
     setIsLoading(false);
     return result;
   };
 
   const logout = () => {
-    userService.logout();
+    authService.logout();
     setUser(null);
   };
 

@@ -94,7 +94,8 @@ const baseHandler = async (event, context) => {
             stock: producto.stock,
             imagen_url: producto.imagen_url || '',
             tags: producto.tags || [],
-            updated_at: producto.updated_at
+            updated_at: producto.updated_at,
+            updated_by: producto.updated_by
         };
 
         return createResponse(200, {

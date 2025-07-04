@@ -78,7 +78,9 @@ const baseHandler = async (event, context) => {
             imagen_url: producto.imagen_url,
             tags: producto.tags || [],
             created_at: producto.created_at,
-            updated_at: producto.updated_at
+            updated_at: producto.updated_at,
+            created_by: producto.created_by,
+            updated_by: producto.updated_by
         }));
 
         // Preparar respuesta con información de paginación

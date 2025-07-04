@@ -63,10 +63,23 @@ const baseHandler = async (event, context) => {
             });
         }
 
-        // Retornar producto encontrado
-        return createResponse(200, {
-            'producto': producto
-        });
+        // Formatear producto para respuesta alineada con data-model
+        const productoFormatted = {
+            codigo: producto.codigo,
+            nombre: producto.nombre,
+            descripcion: producto.descripcion,
+            precio: producto.precio,
+            categoria: producto.categoria,
+            stock: producto.stock,
+            imagen_url: producto.imagen_url || '',
+            tags: producto.tags || [],
+            activo: producto.activo,
+            created_at: producto.created_at,
+            updated_at: producto.updated_at,
+            created_by: producto.created_by,
+            updated_by: producto.updated_by
+        };
+        return createResponse(200, { producto: productoFormatted });
 
     } catch (error) {
         // Excepción y retornar un código de error HTTP 500

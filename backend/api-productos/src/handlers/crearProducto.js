@@ -56,14 +56,15 @@ const baseHandler = async (event, context) => {
             const pk = tenant_id;                    // PK = tenant_id
             const sk = `producto#${codigo}`;         // SK = producto#<codigo>
 
-            // Conectar DynamoDB            const table = getTable(process.env.PRODUCTOS_TABLE);
-            
+            // Conectar DynamoDB
+            const table = getTable(process.env.PRODUCTOS_TABLE);
+
             const timestamp = new Date().toISOString();
-            
+
             // Crear objeto producto con nueva estructura multi-tenant
             const producto = {
-                PK: pk,                            // tenant_id
-                SK: sk,                            // producto#<codigo>
+                PK: pk,
+                SK: sk,
                 tenant_id: tenant_id,
                 codigo: codigo,
                 nombre: nombre,
@@ -76,7 +77,10 @@ const baseHandler = async (event, context) => {
                 activo: true,
                 created_at: timestamp,
                 updated_at: timestamp,
-                created_by: userContext.usuario_id
+                created_by: userContext.user_id,
+                updated_by: userContext.user_id,
+                deleted_at: null,
+                deleted_by: null
             };
 
             // Guardar en DynamoDB
@@ -88,10 +92,10 @@ const baseHandler = async (event, context) => {
                 });
             }
 
-            // Retornar un código de estado HTTP 201 (Created) y un mensaje de éxito
+            // Retornar un código de estado HTTP 201 (Created) y un mensaje de éxito con campos alineados
             return createResponse(201, {
-                'message': 'Producto creado exitosamente',
-                'producto': {
+                message: 'Producto creado exitosamente',
+                producto: {
                     codigo: producto.codigo,
                     nombre: producto.nombre,
                     descripcion: producto.descripcion,
@@ -100,7 +104,11 @@ const baseHandler = async (event, context) => {
                     stock: producto.stock,
                     imagen_url: producto.imagen_url,
                     tags: producto.tags,
-                    created_at: producto.created_at
+                    activo: producto.activo,
+                    created_at: producto.created_at,
+                    updated_at: producto.updated_at,
+                    created_by: producto.created_by,
+                    updated_by: producto.updated_by
                 }
             });} else {
             return createResponse(400, {

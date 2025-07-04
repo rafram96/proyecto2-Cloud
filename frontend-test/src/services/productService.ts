@@ -1,71 +1,66 @@
-import api from './api';
+import { request } from './request';
 
 export const productService = {
   async listarProductos(page = 1, limit = 12) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.post(
+      const data = await request<{ productos: any[]; count: number; pagination: any }>(
         '/productos/listar',
-        { page, limit },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          method: 'POST',
+          body: JSON.stringify({ page, limit }),
+        }
       );
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (error: any) {
-      return { success: false, error: error.response?.data?.error || 'Error al listar productos' };
+      return { success: false, error: error.error || 'Error al listar productos' };
     }
   },
 
   async crearProducto(productData: any) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.post('/productos/crear', productData, {
-        headers: { Authorization: `Bearer ${token}` },
+      const data = await request<any>('/productos/crear', {
+        method: 'POST',
+        body: JSON.stringify(productData),
       });
-      return { success: true, data: response.data };
+      return { success: true, data };
     } catch (error: any) {
-      return { success: false, error: error.response?.data?.error || 'Error al crear producto' };
+      return { success: false, error: error.error || 'Error al crear producto' };
     }
   },
 
   async buscarProducto(codigo: string) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.post(
-        '/productos/buscar',
-        { codigo },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return { success: true, data: response.data };
+      const data = await request<any>('/productos/buscar', {
+        method: 'POST',
+        body: JSON.stringify({ codigo }),
+      });
+      return { success: true, data };
     } catch (error: any) {
-      return { success: false, error: error.response?.data?.error || 'Producto no encontrado' };
+      return { success: false, error: error.error || 'Producto no encontrado' };
     }
   },
 
   async actualizarProducto(codigo: string, updates: any) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.post(
-        '/productos/actualizar',
-        { codigo, ...updates },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return { success: true, data: response.data };
+      const data = await request<any>('/productos/actualizar', {
+        method: 'POST',
+        body: JSON.stringify({ codigo, ...updates }),
+      });
+      return { success: true, data };
     } catch (error: any) {
-      return { success: false, error: error.response?.data?.error || 'Error al actualizar producto' };
+      return { success: false, error: error.error || 'Error al actualizar producto' };
     }
   },
 
   async eliminarProducto(codigo: string) {
     try {
-      const token = localStorage.getItem('token');
-      const response = await api.post(
-        '/productos/eliminar',
-        { codigo },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      return { success: true, data: response.data };
+      const data = await request<any>('/productos/eliminar', {
+        method: 'POST',
+        body: JSON.stringify({ codigo }),
+      });
+      return { success: true, data };
     } catch (error: any) {
-      return { success: false, error: error.response?.data?.error || 'Error al eliminar producto' };
+      return { success: false, error: error.error || 'Error al eliminar producto' };
     }
   },
 };

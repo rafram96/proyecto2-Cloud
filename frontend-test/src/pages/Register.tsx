@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
+type RegisterResult = {
+  success: boolean;
+  error?: string;
+};
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -18,7 +23,7 @@ const Register: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const result = await register(userData);
+    const result: RegisterResult = await register(userData);
     if (result.success) {
       navigate("/login");
     } else {

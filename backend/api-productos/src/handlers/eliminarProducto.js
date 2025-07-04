@@ -50,7 +50,8 @@ const baseHandler = async (event, context) => {
         return createResponse(200, {
             message: 'Producto eliminado exitosamente',
             codigo: codigo,
-            deleted_at: expressionAttributeValues[':deleted_at']
+            deleted_at: expressionAttributeValues[':deleted_at'],
+            deleted_by: expressionAttributeValues[':deleted_by']
         });
 
     } catch (error) {
