@@ -150,22 +150,22 @@ const ViewOrder: React.FC = () => {
         </div>
 
         {/* RESUMEN */}
-        <div className="flex flex-col gap-3 w-1/2 text-[14px] font-lato text-[#434343]">
+        <div className="flex flex-col gap-3 w-1/2 self-end text-[14px] font-lato text-[#434343]">
           <p className="text-[20px] font-semibold normal-case mb-5 uppercase">
             RESUMEN
           </p>
 
-          <div className="flex justify-between">
-            <span className="uppercase">6 ARTÍCULOS</span>
-            <span className="text-end">14.999,90</span>
+           <div className="flex flex-col gap-1">
+            <div className="flex justify-between">
+              <span className="uppercase">6 ARTÍCULOS</span>
+              <span className="text-end">14.999,90</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="uppercase">GASTOS DE ENVÍO</span>
+              <span className="text-end">0,00</span>
+            </div>
           </div>
-
-          <div className="flex justify-between">
-            <span className="uppercase">GASTOS DE ENVÍO</span>
-            <span className="text-end">0,00</span>
-          </div>
-
-          <div className="flex justify-between border-t border-[#B4B2B2] pt-2 mt-2">
+          <div className="flex justify-between border-t border-[#B4B2B2] pt-2 mt-0">
             <span className="uppercase font-semibold">TOTAL</span>
             <span className="text-end font-semibold">14.999,90</span>
           </div>
