@@ -73,7 +73,7 @@ const AppLayout: React.FC = () => {
               <Search />
            </ProtectedRoute>
           } />
-          <Route path="/category/:name" element={<Search />} />
+          
         </Routes>
       </div>
     </div>
