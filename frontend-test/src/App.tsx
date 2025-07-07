@@ -37,33 +37,41 @@ const AppLayout: React.FC = () => {
         <Routes>
           <Route path="/login"   element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/create-product" element={<CreateProduct />} />
-          <Route path="/view-order" element={<ViewOrder />} />
+          <Route path="/create-product" element={
+            <ProtectedRoute>
+            <CreateProduct />
+            </ProtectedRoute>
+            } />
+          <Route path="/view-order" element={
+            <ProtectedRoute>
+              <ViewOrder />
+            </ProtectedRoute>
+            } />
           {/* Rutas protegidas */}
           <Route path="/" element={
-            
+            <ProtectedRoute>
               <Home />
-            
+            </ProtectedRoute>
           } />
           <Route path="/cart" element={
-           
+           <ProtectedRoute>
               <Cart />
-            
+            </ProtectedRoute>
           } />
           <Route path="/orders" element={
-            
+            <ProtectedRoute>
               <Orders />
-            
+            </ProtectedRoute>
           } />
           <Route path="/product/:id" element={
-            
+            <ProtectedRoute>
               <Product />
-            
+            </ProtectedRoute>
           } />
           <Route path="/search" element={
-           
+           <ProtectedRoute>
               <Search />
-           
+           </ProtectedRoute>
           } />
           <Route path="/category/:name" element={<Search />} />
         </Routes>
