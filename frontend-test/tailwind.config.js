@@ -22,7 +22,8 @@ module.exports = {
         amarillo2:  '#FCF7D5',
         amarillo3:  '#FFF0AD',
         amarillo4:  '#FDF7DD',
-        gris:       '#F2F2F2'
+        gris:       '#F2F2F2',
+        gris2:      '#434343'
       },
     },
   },
