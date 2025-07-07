@@ -147,6 +147,46 @@ const mockProducts: Product[] = [
     category: 'Laptops & PCs',
     specs: ['Intel i5', 'RTX 3050', '16GB RAM']
   },
+  {
+    id: '14',
+    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
+    price: 3700,
+    originalPrice: 4000,
+    discount: 26,
+    image: foto,
+    category: 'Laptops & PCs',
+    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
+  },
+  {
+    id: '15',
+    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
+    price: 3700,
+    originalPrice: 4000,
+    discount: 26,
+    image: foto,
+    category: 'Laptops & PCs',
+    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
+  },
+  {
+    id: '16',
+    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
+    price: 3700,
+    originalPrice: 4000,
+    discount: 26,
+    image: foto,
+    category: 'Laptops & PCs',
+    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
+  },
+  {
+    id: '17',
+    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
+    price: 3700,
+    originalPrice: 4000,
+    discount: 26,
+    image: foto,
+    category: 'Laptops & PCs',
+    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
+  },
   
   // Agrega más productos aquí...
 ];
@@ -154,12 +194,22 @@ const mockProducts: Product[] = [
 const Search: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const categoryParam = searchParams.get('category');
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryParam ? [categoryParam] : []);
   const [priceRange, setPriceRange] = useState({ min: 100, max: 4000 });
   const [currentPage, setCurrentPage] = useState(1);
   const [products] = useState<Product[]>(mockProducts);
   
   const productsPerPage = 16;
+
+   // Escucha cambios en la URL y actualiza la categoría
+  useEffect(() => {
+    const param = searchParams.get('category');
+    if (param) {
+      setSelectedCategories([param]);
+    }
+  }, [searchParams]);
 
   // Filtrar productos
   const filteredProducts = useMemo(() => {
@@ -167,12 +217,10 @@ const Search: React.FC = () => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
       const matchesPrice = product.price >= priceRange.min && product.price <= priceRange.max;
-      
       return matchesSearch && matchesCategory && matchesPrice;
     });
   }, [products, searchQuery, selectedCategories, priceRange]);
 
-  // Paginación
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * productsPerPage;

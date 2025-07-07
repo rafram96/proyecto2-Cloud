@@ -60,15 +60,16 @@ const ViewOrder: React.FC = () => {
   ];
 
   return (
-    <div className="p-10">
+    <div className="min-h-screen  pt-[40px] ">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Título */}
-      <h1 className="font-koulen text-[40px] mb-13">VER PEDIDO</h1>
+      <h1 className="font-koulen text-[40px] mt-3 mb-13">VER PEDIDO</h1>
 
       {/* Info principal y QR */}
       <div className="mb-15 flex justify-between items-end gap-5">
         {/* Bloque de información */}
         <div className="flex flex-col gap-3 text-[14px] font-lato text-[#434343] uppercase">
-          <p className="text-[20px] font-semibold normal-case mb-5">
+          <p className="text-[20px]  text-black font-bold normal-case mb-5">
             N° {orderNumber}
           </p>
 
@@ -99,7 +100,7 @@ const ViewOrder: React.FC = () => {
 
       {/* Listo para la entrega */}
       <div className="flex items-center gap-24 mt-20 text-[#000000] font-lato">
-        <span className="w-[200px] font-semibold uppercase">
+        <span className="w-[400px] text-[20px] font-lato font-semibold uppercase">
           Listo para la entrega
         </span>
         <span className="font-normal normal-case"></span>
@@ -117,8 +118,8 @@ const ViewOrder: React.FC = () => {
               />
             </div>
             {/* Detalles del producto */}
-            <div className="mt-2 text-left text-[14px] font-semibold uppercase text-[#434343]">
-              <p className="font-semibold mb-0 min-h-[48px] leading-snug">
+            <div className="mt-2 text-left text-[14px] font-lato font-semibold uppercase text-[#434343]">
+              <p className="font-lato font-semibold text-black mb-0 min-h-[48px] leading-snug">
                 {item.name}
               </p>
               <p>{item.price}</p>
@@ -132,7 +133,7 @@ const ViewOrder: React.FC = () => {
       <div className="flex justify-between gap-20 mt-16 text-[14px] font-lato text-[#434343] w-full">
         {/* DETALLES ENVÍO */}
         <div className="flex flex-col gap-1 uppercase w-1/2">
-          <p className="text-[20px] font-semibold normal-case mb-5">
+          <p className="text-[20px] font-bold normal-case mb-5">
             DETALLES ENVÍO
           </p>
 
@@ -151,7 +152,7 @@ const ViewOrder: React.FC = () => {
 
         {/* RESUMEN */}
         <div className="flex flex-col gap-3 w-1/2 self-end text-[14px] font-lato text-[#434343]">
-          <p className="text-[20px] font-semibold normal-case mb-5 uppercase">
+          <p className="text-[20px] font-bold normal-case mb-5 uppercase">
             RESUMEN
           </p>
 
@@ -166,11 +167,12 @@ const ViewOrder: React.FC = () => {
             </div>
           </div>
           <div className="flex justify-between border-t border-[#B4B2B2] pt-2 mt-0">
-            <span className="uppercase font-semibold">TOTAL</span>
-            <span className="text-end font-semibold">14.999,90</span>
+            <span className="uppercase font-bold">TOTAL</span>
+            <span className="text-end font-bold">14.999,90</span>
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

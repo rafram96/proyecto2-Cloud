@@ -44,7 +44,7 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === 1}
         className="px-3 py-2 text-black hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        &lt;
+       <svg className="h-4 w-4 text-gray-600 hover:text-gray-800 "  width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <polyline points="15 6 9 12 15 18" /></svg>
       </button>
       
       {getVisiblePages().map((page, index) => (
@@ -67,7 +67,7 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={currentPage === totalPages}
         className="px-3 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        &gt;
+        <svg className="h-4 w-4 text-gray-600 hover:text-gray-800  "  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  strokeWidth="2"  strokeLinecap="round"  strokeLinejoin="round">  <polyline points="9 18 15 12 9 6" /></svg>
       </button>
     </div>
   );

@@ -33,7 +33,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-black">
+    <div className="min-h-screen  pt-[90px] ">
+      <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
       <div className="flex w-full justify-center">
         <div className="w-[650px] flex items-center justify-center">
             <form onSubmit={handleSubmit}>
@@ -115,6 +116,7 @@ const Login: React.FC = () => {
             </form>
           </div>
       </div>
+    </div>
     </div>
   );
 };

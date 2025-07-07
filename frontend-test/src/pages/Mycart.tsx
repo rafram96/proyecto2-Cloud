@@ -85,9 +85,9 @@ const Cart: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen  pt-[60px] ">
-      <div>
-        <h2 className="px-[22%] font-koulen text-[40px] mb-4">MY CART</h2>
+    <div className="min-h-screen  pt-[40px] ">
+      <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+        <h2 className=" font-koulen text-[40px] mb-1">MY CART</h2>
       </div>
       <div className="max-w-20xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row items-start gap-10 justify-center ">
@@ -149,7 +149,7 @@ const Cart: React.FC = () => {
                       className="absolute top-3 right-2 w-8 h-8 flex items-center justify-center  hover: transition-colors duration-200"
                       title="Eliminar producto"
                     >
-                      <svg className="w-5 h-5 text-black hover:text-red-600"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="18" y1="6" x2="6" y2="18" />  <line x1="6" y1="6" x2="18" y2="18" /></svg>
+                      <svg className="w-5 h-5 text-black hover:text-red-600"  width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="18" y1="6" x2="6" y2="18" />  <line x1="6" y1="6" x2="18" y2="18" /></svg>
                     </button>
 
                   

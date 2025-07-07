@@ -33,7 +33,8 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-black">
+    <div className="min-h-screen  pt-[90px] ">
+      <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
       <div className="flex justify-center items-center w-full">
         <div className="w-[1100px] flex items-center justify-center">
           <form
@@ -142,6 +143,7 @@ const Register: React.FC = () => {
           </form>
         </div>
       </div>
+    </div>
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Minus, Plus, ArrowLeft } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {  useRef } from 'react';
 import foto1 from '../assets/lenovo.png';
 import foto2 from '../assets/lenovo2.png';
 import foto3 from '../assets/lenovo3.png';
@@ -206,9 +208,8 @@ interface ProductProps {
   onNavigateToProduct?: (id: string) => void;
 }
 
-const Product: React.FC<ProductProps> = ({ 
-  productId = '1', 
-  onNavigateBack = () => console.log('Navigate back'),
+const Product: React.FC<ProductProps> = ({
+  productId = '1',
   onNavigateToProduct = (id) => console.log('Navigate to product:', id)
 }) => {
   const [product, setProduct] = useState<ProductDetails | null>(null);
@@ -218,8 +219,17 @@ const Product: React.FC<ProductProps> = ({
   const [activeTab, setActiveTab] = useState<'specifications' | 'features'>('features');
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+  const hasHistory = useRef(false);
+
+  // Verifica si hay historial
   useEffect(() => {
-    // Simular carga de producto
+    hasHistory.current = window.history.length > 1;
+  }, []);
+
+  // Cargar el producto
+  useEffect(() => {
     const fetchProduct = () => {
       const foundProduct = sampleProducts.find(p => p.id === productId);
       setProduct(foundProduct || null);
@@ -228,6 +238,14 @@ const Product: React.FC<ProductProps> = ({
 
     setTimeout(fetchProduct, 500);
   }, [productId]);
+
+  const handleBack = () => {
+    if (hasHistory.current) {
+      navigate(-1);
+    } else {
+      navigate('/search');
+    }
+  };
 
   const handleQuantityChange = (change: number) => {
     if (!product) return;
@@ -239,7 +257,7 @@ const Product: React.FC<ProductProps> = ({
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     const cartItem = {
       id: product.id,
       name: product.name,
@@ -248,9 +266,8 @@ const Product: React.FC<ProductProps> = ({
       color: product.colors[selectedColor].name,
       image: product.images[0]
     };
-    
+
     console.log('Adding to cart:', cartItem);
-    // Aquí implementarías la lógica del carrito
     alert('Producto agregado al carrito!');
   };
 
@@ -270,8 +287,8 @@ const Product: React.FC<ProductProps> = ({
     return (
       <div className="min-h-screen flex items-center justify-center flex-col">
         <div className="text-lg mb-4">Producto no encontrado</div>
-        <button 
-          onClick={onNavigateBack}
+        <button
+          onClick={handleBack}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
           Back to the beginning
@@ -279,12 +296,11 @@ const Product: React.FC<ProductProps> = ({
       </div>
     );
   }
-
   return (
     <div className="max-w-6xl mx-auto px-8 py-8">
       {/* Botón de regreso */}
       <button
-        onClick={onNavigateBack}
+        onClick={handleBack}
         className="flex items-center text-gray-600 hover:text-gray-800 mb-6"
       >
         <ArrowLeft className="w-5 h-5 mr-2" />

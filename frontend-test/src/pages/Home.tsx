@@ -8,12 +8,12 @@ import ProductCard from '../components/ProductCard.tsx';
 import Lenovo from '../assets/lenovo.png';
 
 const categories = [
-  { icon: <FaGamepad size={28} />, label: 'Gaming', to: '/category/gaming' },
-  { icon: <FaMobileAlt size={28} />, label: 'Mobile', to: '/category/mobile' },
-  { icon: <FaLaptop size={28} />, label: 'Laptops', to: '/category/laptops' },
-  { icon: <FaHeadphones size={28} />, label: 'Audio', to: '/category/audio' },
-  { icon: <FaPlug size={28} />, label: 'Accessories', to: '/category/accessories' },
-  { icon: <FaTv size={28} />, label: 'Monitors', to: '/category/monitors' },
+  { icon: <FaGamepad size={50} />, label: 'Gaming Gear' },
+  { icon: <FaMobileAlt size={50} />, label: 'Smartphones' },
+  { icon: <FaLaptop size={50} />, label: 'Laptops & PCs' },
+  { icon: <FaHeadphones size={50} />, label: 'Audio & Headphones' },
+  { icon: <FaPlug size={50} />, label: 'Accessories' },
+  { icon: <FaTv size={50} />, label: 'TV & Monitors' },
 ];
 
 const sampleProducts = [
@@ -33,29 +33,39 @@ const sampleProducts = [
 const Home: React.FC = () => {
   return (
     <div className="flex flex-col  justify-items-center min-h-screen bg-black text-white">
-        <section className="relative text-center" style={{
-  backgroundImage: `url(${imagen1})`, backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '600px',}}>
-    <div className="absolute inset-0 bg-black opacity-50"></div>
-    <div className="relative z-10 flex flex-col items-center justify-center h-full">
-      <h1 className="font-koulen mt-40 font-bold text-[128px] text-white ">Up to 30% off laptops</h1> 
-      <ShopNowButton />
-    </div>
-        </section>
-        <section className="text-center mt-10">
-          <h3 className="font-koulen text-lg text-gray-500">popular categories</h3>
+      <div className="">
+          <section
+            className="relative flex items-center justify-center text-center"
+            style={{
+              backgroundImage: `url(${imagen1})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              height: '600px', // Usa height en lugar de minHeight
+            }}
+          >
+            <div className="absolute inset-0 bg-black opacity-50"></div>
+            <div className="relative z-10 flex flex-col items-center justify-center">
+              <h1 className="font-koulen font-bold text-[128px] text-white">
+                Up to 30% off laptops
+              </h1>
+              <ShopNowButton />
+            </div>
+          </section>
+        </div>
+        <section className="text-center mt-20">
+          <h3 className="font-koulen text-[32px] text-white">popular categories</h3>
         </section>
         <section className="flex flex-wrap justify-center mt-10 gap-6">
           {categories.map((category) => (
             <CategoryButtons
               key={category.label}
               icon={category.icon}
-              to={category.to}
               label={category.label}
             />
           ))}
         </section>
-        <section className="text-center text-white mt-16">
-          <h2 className="font-koulen text-xl mb-6">TRENDING PRODUCTS</h2>
+        <section className="text-center text-white mt-20">
+          <h2 className="font-koulen text-[32px]  mb-6">TRENDING PRODUCTS</h2>
           <div className="flex flex-wrap justify-center gap-6">
             {sampleProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -72,7 +82,7 @@ const Home: React.FC = () => {
           </div>
         </section>
         <section className="text-center text-white mt-16">
-          <h2 className="font-koulen text-xl mb-6">NEW PRODUCTS</h2>
+          <h2 className="font-koulen text-[32px]  mb-6">NEW PRODUCTS</h2>
           <div className="flex flex-wrap justify-center gap-6">
             {sampleProducts.map((p) => (
             <ProductCard key={p.id} product={p} />

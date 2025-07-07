@@ -82,7 +82,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               name="min"
               value={priceRange.min}
               onChange={handlePriceChange}
-              className="w-15 text-[15px] px-2 py-1  "
+              className="w-15 text-[15px] px-1 py-1  "
               min="100"
               max={priceRange.max - 100}
             />
@@ -93,48 +93,73 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               name="max"
               value={priceRange.max}
               onChange={handlePriceChange}
-              className="w-15 text-[15px] px-2 py-1 "
+              className="w-15 text-[15px] px- py-1 "
               min={priceRange.min + 100}
               max="4000"
             />
           </div>
           
-          {/* Price Range Slider */}
-          <div className="relative mb-2">
-            {/* Slider para MIN */}
-            <div className="mb-3">
+          {/* Sliders superpuestos */}
+            <div className="relative h-6">
+              {/* Barra de fondo gris */}
+              <div className="absolute top-1 left-0 right-0 h-2 bg-amarillo3 rounded-full -translate-y-1/2 z-10" />
+
+
+              {/* Barra activa */}
+              <div
+                className="absolute top-1 h-2 bg-black rounded-full -translate-y-1 z-10"
+                style={{
+                  left: `${((priceRange.min - 100) / 3900) * 100}%`,
+                  width: `${((priceRange.max - priceRange.min) / 3900) * 100}%`,
+                }}
+              />
+
+              {/* Slider MIN */}
               <input
                 type="range"
                 min="100"
-                max="3900"
+                max="4000"
                 value={priceRange.min}
-                onChange={(e) => onPriceRangeChange(parseInt(e.target.value), priceRange.max)}
-                className="w-full h-2 bg-amarillo3 rounded-lg appearance-none cursor-pointer price-slider"
-                style={{
-                  background: ` ${((priceRange.min - 100) / 3800) * 100}%, ${((priceRange.min - 100) / 3800) * 100}%)`
-                }}
-              />
-            </div>
-            
-            {/* Slider para MAX */}
-            <div className="mb-3">
-              
+                onChange={(e) =>
+                  onPriceRangeChange(Math.min(+e.target.value, priceRange.max - 100), priceRange.max)
+                }
+                className="absolute w-full h-2 appearance-none rounded-full bg-transparent z-30 pointer-events-none
+                  [&::-webkit-slider-thumb]:pointer-events-auto
+                  [&::-webkit-slider-thumb]:bg-black
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:h-4
+                  [&::-webkit-slider-thumb]:w-4
+                  [&::-webkit-slider-thumb]:appearance-none"
+            />
+
+              {/* Slider MAX */}
               <input
                 type="range"
-                min="200"
+                min="100"
                 max="4000"
                 value={priceRange.max}
-                onChange={(e) => onPriceRangeChange(priceRange.min, parseInt(e.target.value))}
-                className="w-full h-2 bg-amarillo3 rounded-lg appearance-none cursor-pointer price-slider"
-                style={{
-                  background: ` ${((priceRange.max - 200) / 3800) * 100}%,  ${((priceRange.max - 200) / 3800) * 100}%)`
-                }}
-              />
+                onChange={(e) =>
+                  onPriceRangeChange(priceRange.min, Math.max(+e.target.value, priceRange.min + 100))
+                }
+                className="absolute w-full h-2 appearance-none rounded-full bg-transparent z-20 pointer-events-none
+                  [&::-webkit-slider-thumb]:pointer-events-auto
+                  [&::-webkit-slider-thumb]:bg-black
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:h-4
+                  [&::-webkit-slider-thumb]:w-4
+                  [&::-webkit-slider-thumb]:appearance-none"
+            />
+
+                          
+
+            </div>
+
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>S/. 100.00</span>
+              <span>S/. 4000.00</span>
             </div>
             
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
