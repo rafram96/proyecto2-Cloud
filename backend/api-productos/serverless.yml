@@ -181,7 +181,7 @@ resources:
               Action:
                 - s3:GetObject
               Resource: !Sub "arn:aws:s3:::imagenes-productos-${self:provider.stage}/*"
-            Value: api-productos
+            - Value: api-productos
 
     ProductImagesBucket:
       Type: AWS::S3::Bucket
