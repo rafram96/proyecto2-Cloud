@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import '../components/ShopNow.tsx'
 import ShopNowButton from '../components/ShopNow.tsx';
 import { FaGamepad, FaMobileAlt, FaLaptop, FaHeadphones, FaPlug, FaTv } from 'react-icons/fa';
 import CategoryButtons from '../components/CategoryButtons';
 import imagen1 from '../assets/images/imagen1.jpg';
 import ProductCard from '../components/ProductCard.tsx';
-import Lenovo from '../assets/lenovo.png';
+import { productService } from '../services/productService';
+import type { Product } from '../types/product';
+import { useAuth } from '../contexts/AuthContext';
 
 const categories = [
   { icon: <FaGamepad size={50} />, label: 'Gaming Gear' },
@@ -16,21 +18,44 @@ const categories = [
   { icon: <FaTv size={50} />, label: 'TV & Monitors' },
 ];
 
-const sampleProducts = [
-  {
-    id: '1',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: Lenovo,
-    category: 'laptops',
-  },
-];
-
-
+// Función para convertir el producto de la API al formato esperado por ProductCard
+const convertToProductCardFormat = (product: Product) => ({
+  id: product.codigo,
+  name: product.nombre,
+  price: product.precio,
+  image: product.imagen_url || '/placeholder-image.jpg',
+  category: product.categoria,
+});
 
 const Home: React.FC = () => {
+  const { user } = useAuth();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (user?.tenantId) {
+        try {
+          const result = await productService.listarProductos();
+          if (result.success && result.data) {
+            setProducts(result.data.productos || []);
+          }
+        } catch (error) {
+          console.error('Error loading products:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [user?.tenantId]);
+
+  // Mostrar productos convertidos al formato de ProductCard
+  const displayProducts = products.map(convertToProductCardFormat).slice(0, 8);
+
   return (
     <div className="flex flex-col justify-items-center min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white theme-transition">
       <div className="">
@@ -64,38 +89,42 @@ const Home: React.FC = () => {
             />
           ))}
         </section>
+        
         <section className="text-center mt-20">
           <h2 className="font-koulen text-[32px] text-gray-800 dark:text-white mb-6">TRENDING PRODUCTS</h2>
           <div className="flex flex-wrap justify-center gap-6">
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-lg text-gray-600 dark:text-gray-400">Cargando productos...</div>
+              </div>
+            ) : displayProducts.length > 0 ? (
+              displayProducts.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-lg text-gray-600 dark:text-gray-400">No hay productos disponibles</div>
+              </div>
+            )}
           </div>
         </section>
+        
         <section className="text-center mt-16">
           <h2 className="font-koulen text-[32px] text-gray-800 dark:text-white mb-6">NEW PRODUCTS</h2>
           <div className="flex flex-wrap justify-center gap-6">
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
-            {sampleProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-            ))}
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="text-lg text-gray-600 dark:text-gray-400">Cargando productos...</div>
+              </div>
+            ) : displayProducts.length > 4 ? (
+              displayProducts.slice(4, 8).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-lg text-gray-600 dark:text-gray-400">No hay productos nuevos disponibles</div>
+              </div>
+            )}
           </div>
         </section>
         <section className="text-center text-white mt-16 mb-10"></section>

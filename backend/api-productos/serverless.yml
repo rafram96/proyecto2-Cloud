@@ -1,16 +1,29 @@
 org: rafaelram
 service: api-productos
 
+package:
+  individually: true
+  patterns:
+    - '!node_modules/**'
+    - '!*.zip'
+    - '!*.tar.gz'
+    - '!.git/**'
+    - '!.vscode/**'
+    - '!*.md'
+
 provider:
   name: aws
   runtime: nodejs18.x
-  timeout: 30
+  memorySize: 1024
+  timeout: 29
+  stage: ${opt:stage, 'dev'}
   iam:
     role: arn:aws:iam::498917627164:role/LabRole
   environment:
     PRODUCTOS_TABLE: p_productos-${self:provider.stage}
     JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
     STAGE: ${self:provider.stage}
+    IMAGES_BUCKET: imagenes-productos-${self:provider.stage}
 
 functions:
   crear:
@@ -19,39 +32,88 @@ functions:
       - http:
           path: /productos/crear
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+            allowCredentials: false
           integration: lambda
+          
   listar:
     handler: src/handlers/listarProductos.lambda_handler
     events:
       - http:
           path: /productos/listar
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+            allowCredentials: false
           integration: lambda
+          
   buscar:
     handler: src/handlers/buscarProducto.lambda_handler
     events:
       - http:
           path: /productos/buscar
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+            allowCredentials: false
           integration: lambda
+          
   actualizar:
     handler: src/handlers/actualizarProducto.lambda_handler
     events:
       - http:
           path: /productos/actualizar
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+            allowCredentials: false
           integration: lambda
+          
   eliminar:
     handler: src/handlers/eliminarProducto.lambda_handler
     events:
       - http:
           path: /productos/eliminar
           method: post
-          cors: true
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+            allowCredentials: false
+          integration: lambda
+          
+  upload-image:
+    handler: src/handlers/uploadImage.lambda_handler
+    events:
+      - http:
+          path: /productos/upload-image
+          method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+            allowCredentials: false
           integration: lambda
 
 resources:
@@ -89,6 +151,36 @@ resources:
           - Key: Environment
             Value: ${self:custom.stage}
           - Key: Service
+            Value: api-productos
+
+    # Bucket de Imágenes de Productos
+    ImagenesProductosBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: imagenes-productos-${self:provider.stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        OwnershipControls:
+          Rules:
+            - ObjectOwnership: BucketOwnerPreferred
+
+    # Política del bucket para acceso público de lectura
+    ImagenesProductosBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref ImagenesProductosBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::imagenes-productos-${self:provider.stage}/*"
             Value: api-productos
 
     ProductImagesBucket:

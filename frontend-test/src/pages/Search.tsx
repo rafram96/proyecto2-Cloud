@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import Pagination from '../components/Pagination';
-import foto from '../assets/lenovo.png';
+import { productService } from '../services/productService';
+import type { Product } from '../types/product';
+import { useAuth } from '../contexts/AuthContext';
 
-export interface Product {
+export interface ProductCardFormat {
   id: string;
   name: string;
   price: number;
@@ -15,183 +17,19 @@ export interface Product {
   category: string;
   specs?: string[];
 }
-// Mock data - reemplaza esto con tu API real
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '2',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '3',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '4',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '5',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '6',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '7',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '8',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '9',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '10',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '11',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '12',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '13',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '14',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '15',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '16',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  {
-    id: '17',
-    name: 'Lenovo LOQ 9na Gen (15" Intel) con RTX™ 3050',
-    price: 3700,
-    originalPrice: 4000,
-    discount: 26,
-    image: foto,
-    category: 'Laptops & PCs',
-    specs: ['Intel i5', 'RTX 3050', '16GB RAM']
-  },
-  
-  // Agrega más productos aquí...
-];
+
+// Función para convertir el producto de la API al formato esperado por ProductCard
+const convertToProductCardFormat = (product: Product): ProductCardFormat => ({
+  id: product.codigo,
+  name: product.nombre,
+  price: product.precio,
+  image: product.imagen_url || '/placeholder-image.jpg',
+  category: product.categoria,
+  specs: product.tags || [],
+});
 
 const Search: React.FC = () => {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const categoryParam = searchParams.get('category');
@@ -199,9 +37,33 @@ const Search: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryParam ? [categoryParam] : []);
   const [priceRange, setPriceRange] = useState({ min: 100, max: 4000 });
   const [currentPage, setCurrentPage] = useState(1);
-  const [products] = useState<Product[]>(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const productsPerPage = 16;
+
+  // Cargar productos desde la API
+  useEffect(() => {
+    const loadProducts = async () => {
+      if (user?.tenantId) {
+        try {
+          setLoading(true);
+          const result = await productService.listarProductos();
+          if (result.success && result.data) {
+            setProducts(result.data.productos || []);
+          }
+        } catch (error) {
+          console.error('Error loading products:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, [user?.tenantId]);
 
    // Escucha cambios en la URL y actualiza la categoría
   useEffect(() => {
@@ -214,9 +76,10 @@ const Search: React.FC = () => {
   // Filtrar productos
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
-      const matchesPrice = product.price >= priceRange.min && product.price <= priceRange.max;
+      const matchesSearch = product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           product.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.categoria);
+      const matchesPrice = product.precio >= priceRange.min && product.precio <= priceRange.max;
       return matchesSearch && matchesCategory && matchesPrice;
     });
   }, [products, searchQuery, selectedCategories, priceRange]);
@@ -224,7 +87,7 @@ const Search: React.FC = () => {
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * productsPerPage;
-    return filteredProducts.slice(startIndex, startIndex + productsPerPage);
+    return filteredProducts.slice(startIndex, startIndex + productsPerPage).map(convertToProductCardFormat);
   }, [filteredProducts, currentPage]);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -259,7 +122,7 @@ const Search: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
+                placeholder="Buscar productos..."
                 className="w-full px-4 py-3 pl-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-jaldi rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 theme-transition"
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
@@ -282,31 +145,43 @@ const Search: React.FC = () => {
         />
 
         {/* Contenido principal */}
-        
         <div className="flex-1 p-6">
           {/* Resultados info */}
           <div className="mt-6 mb-2">
             <p className="text-gray-600 dark:text-gray-400 text-[16px] font-jaldi">
-              Showing {((currentPage - 1) * productsPerPage) + 1}-{Math.min(currentPage * productsPerPage, filteredProducts.length)} of {filteredProducts.length} results
+              {loading ? 'Cargando productos...' : 
+               `Mostrando ${((currentPage - 1) * productsPerPage) + 1}-${Math.min(currentPage * productsPerPage, filteredProducts.length)} de ${filteredProducts.length} resultados`}
             </p>
           </div>
           <div className="w-95 h-px bg-yellow-400 dark:bg-yellow-500 mb-2"></div>
+          
           {/* Grid de productos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8 ">
-            {paginatedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
+            {loading ? (
+              // Skeleton loading
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-4 animate-pulse">
+                  <div className="bg-gray-300 dark:bg-gray-600 h-48 rounded mb-4"></div>
+                  <div className="bg-gray-300 dark:bg-gray-600 h-4 rounded mb-2"></div>
+                  <div className="bg-gray-300 dark:bg-gray-600 h-4 rounded w-2/3"></div>
+                </div>
+              ))
+            ) : (
+              paginatedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            )}
           </div>
 
           {/* Mensaje si no hay productos */}
-          {filteredProducts.length === 0 && (
+          {!loading && filteredProducts.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">No products found matching your criteria.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-lg">No se encontraron productos que coincidan con tus criterios.</p>
             </div>
           )}
           
           {/* Paginación */}
-          {totalPages > 1 && (
+          {!loading && totalPages > 1 && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

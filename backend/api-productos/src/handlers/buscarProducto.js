@@ -6,10 +6,26 @@ const { getItem, getTable } = require('../utils/dynamodb');
  * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
  */
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id',
+    'Access-Control-Allow-Methods': 'OPTIONS,POST',
+    'Content-Type': 'application/json'
+};
+
 // BUSCAR PRODUCTO
 const baseHandler = async (event, context) => {
     try {
-        console.log(event);
+        console.log('Search product event:', event);
+        
+        // Manejar preflight OPTIONS
+        if (event.httpMethod === 'OPTIONS') {
+            return {
+                statusCode: 200,
+                headers: corsHeaders,
+                body: ''
+            };
+        }
         
         // userContext inyectado por requireAuth
         const userContext = event.userContext;

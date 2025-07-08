@@ -7,11 +7,27 @@ const { getTable, createItem } = require('../utils/dynamodb');
  * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
  */
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id',
+    'Access-Control-Allow-Methods': 'OPTIONS,POST',
+    'Content-Type': 'application/json'
+};
+
 // CREAR PRODUCTO
 const baseHandler = async (event, context) => {
     try {
-        console.log(event);
+        console.log('Create product event:', event);
         
+        // Manejar preflight OPTIONS
+        if (event.httpMethod === 'OPTIONS') {
+            return {
+                statusCode: 200,
+                headers: corsHeaders,
+                body: ''
+            };
+        }
+
         // userContext inyectado por requireAuth
         const userContext = event.userContext;
 
@@ -31,19 +47,29 @@ const baseHandler = async (event, context) => {
         const stock = body.stock;
         const imagen_url = body.imagen_url || '';
         const tags = body.tags || [];
-          // Verificar que los campos requeridos existen
+        // Verificar que los campos requeridos existen
         if (nombre && descripcion && precio && categoria && stock !== undefined) {
             // Validar tipos de datos
             if (typeof precio !== 'number' || precio <= 0) {
-                return createResponse(400, {
-                    'error': 'El precio debe ser un número mayor a 0'
-                });
+                return {
+                    statusCode: 400,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        success: false,
+                        error: 'El precio debe ser un número mayor a 0'
+                    })
+                };
             }
 
             if (typeof stock !== 'number' || stock < 0) {
-                return createResponse(400, {
-                    'error': 'El stock debe ser un número mayor o igual a 0'
-                });
+                return {
+                    statusCode: 400,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        success: false,
+                        error: 'El stock debe ser un número mayor o igual a 0'
+                    })
+                };
             }
 
             // Generar código único del producto
@@ -87,41 +113,58 @@ const baseHandler = async (event, context) => {
             const result = await createItem(table, producto);
 
             if (result.error) {
-                return createResponse(500, {
-                    'error': result.error
-                });
+                return {
+                    statusCode: 500,
+                    headers: corsHeaders,
+                    body: JSON.stringify({
+                        success: false,
+                        error: result.error
+                    })
+                };
             }
 
             // Retornar un código de estado HTTP 201 (Created) y un mensaje de éxito con campos alineados
-            return createResponse(201, {
-                message: 'Producto creado exitosamente',
-                producto: {
-                    codigo: producto.codigo,
-                    nombre: producto.nombre,
-                    descripcion: producto.descripcion,
-                    precio: producto.precio,
-                    categoria: producto.categoria,
-                    stock: producto.stock,
-                    imagen_url: producto.imagen_url,
-                    tags: producto.tags,
-                    activo: producto.activo,
-                    created_at: producto.created_at,
-                    updated_at: producto.updated_at,
-                    created_by: producto.created_by,
-                    updated_by: producto.updated_by
-                }
-            });} else {
-            return createResponse(400, {
-                'error': 'Campos requeridos: nombre, descripcion, precio, categoria, stock'
-            });
+            return {
+                statusCode: 201,
+                headers: corsHeaders,
+                body: JSON.stringify({
+                    success: true,
+                    message: 'Producto creado exitosamente',
+                    data: {
+                        codigo: producto.codigo,
+                        nombre: producto.nombre,
+                        descripcion: producto.descripcion,
+                        precio: producto.precio,
+                        categoria: producto.categoria,
+                        stock: producto.stock,
+                        imagen_url: producto.imagen_url,
+                        tags: producto.tags,
+                        created_at: producto.created_at
+                    }
+                })
+            };
+        } else {
+            return {
+                statusCode: 400,
+                headers: corsHeaders,
+                body: JSON.stringify({
+                    success: false,
+                    error: 'Campos requeridos: nombre, descripcion, precio, categoria, stock'
+                })
+            };
         }
 
     } catch (error) {
         // Excepción y retornar un código de error HTTP 500
         console.error('Exception:', error);
-        return createResponse(500, {
-            'error': error.message
-        });
+        return {
+            statusCode: 500,
+            headers: corsHeaders,
+            body: JSON.stringify({
+                success: false,
+                error: error.message || 'Error interno del servidor'
+            })
+        };
     }
 };
 
