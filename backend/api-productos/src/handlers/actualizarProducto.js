@@ -6,19 +6,41 @@ const { updateItem, getItem, getTable } = require('../utils/dynamodb');
  * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
  */
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id',
+    'Access-Control-Allow-Methods': 'OPTIONS,POST',
+    'Content-Type': 'application/json'
+};
+
 const baseHandler = async (event, context) => {
     try {
+        console.log('Update product event:', event);
+        
+        // Manejar preflight OPTIONS
+        if (event.httpMethod === 'OPTIONS') {
+            return {
+                statusCode: 200,
+                headers: corsHeaders,
+                body: ''
+            };
+        }
+        
         // userContext inyectado por requireAuth
         const userContext = event.userContext;
 
-        // Obtener código del producto de los path parameters
-        const codigo = event.pathParameters?.codigo;
+        // Obtener código del producto del cuerpo de la petición
+        let body;
+        if (typeof event['body'] === 'string') {
+            body = JSON.parse(event['body']);
+        } else {
+            body = event['body'];
+        }
+
+        const codigo = body['codigo'];
         if (!codigo) {
             return createResponse(400, { success: false, error: 'Código del producto requerido' });
         }
-
-        // Parsear el body
-        const body = JSON.parse(event.body);
 
         // Validar que se envió al menos un campo para actualizar
         const camposPermitidos = ['nombre', 'descripcion', 'precio', 'categoria', 'stock', 'imagen_url', 'tags'];
@@ -30,9 +52,9 @@ const baseHandler = async (event, context) => {
 
         const table = getTable(process.env.PRODUCTOS_TABLE);
 
-        // Verificar que el producto existe y pertenece al tenant
+        // Verificar que el producto existe y pertenece al tenant usando las claves correctas
         const key = {
-            PK: userContext.tenant_id,
+            tenant_id: userContext.tenant_id,
             SK: `producto#${codigo}`
         };
 
@@ -52,13 +74,13 @@ const baseHandler = async (event, context) => {
         // Validar tipos de datos si se proporcionan
         if (body.precio !== undefined) {
             if (typeof body.precio !== 'number' || body.precio <= 0) {
-                return createResponse(400, { error: 'El precio debe ser un número mayor a 0' });
+                return createResponse(400, { success: false, error: 'El precio debe ser un número mayor a 0' });
             }
         }
 
         if (body.stock !== undefined) {
             if (typeof body.stock !== 'number' || body.stock < 0) {
-                return createResponse(400, { error: 'El stock debe ser un número mayor o igual a 0' });
+                return createResponse(400, { success: false, error: 'El stock debe ser un número mayor o igual a 0' });
             }
         }
 
@@ -118,4 +140,4 @@ const baseHandler = async (event, context) => {
     }
 };
 // Proteger endpoint con JWT
-exports.handler = requireAuth(baseHandler);
+exports.lambda_handler = requireAuth(baseHandler);

@@ -18,7 +18,7 @@ provider:
   timeout: 29
   stage: ${opt:stage, 'dev'}
   iam:
-    role: arn:aws:iam::498917627164:role/LabRole
+    role: arn:aws:iam::582232142172:role/LabRole
   environment:
     PRODUCTOS_TABLE: p_productos-${self:provider.stage}
     JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
@@ -121,7 +121,7 @@ resources:
     ProductosTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.tableName}
+        TableName: p_productos-${self:provider.stage}
         AttributeDefinitions:
           - AttributeName: tenant_id
             AttributeType: S
@@ -149,7 +149,7 @@ resources:
           StreamViewType: NEW_AND_OLD_IMAGES
         Tags:
           - Key: Environment
-            Value: ${self:custom.stage}
+            Value: ${self:provider.stage}
           - Key: Service
             Value: api-productos
 
@@ -172,34 +172,6 @@ resources:
       Type: AWS::S3::BucketPolicy
       Properties:
         Bucket: !Ref ImagenesProductosBucket
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: PublicReadGetObject
-              Effect: Allow
-              Principal: "*"
-              Action:
-                - s3:GetObject
-              Resource: !Sub "arn:aws:s3:::imagenes-productos-${self:provider.stage}/*"
-            - Value: api-productos
-
-    ProductImagesBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: imagenes-productos-${self:provider.stage}
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
-        OwnershipControls:
-          Rules:
-            - ObjectOwnership: BucketOwnerPreferred
-
-    ProductImagesBucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: !Ref ProductImagesBucket
         PolicyDocument:
           Version: "2012-10-17"
           Statement:

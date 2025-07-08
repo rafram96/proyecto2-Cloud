@@ -44,30 +44,33 @@ const baseHandler = async (event, context) => {
         
         if (!codigo) {
             return createResponse(400, {
-                'error': 'Código del producto requerido'
+                success: false,
+                error: 'Código del producto requerido'
             });
         }
 
         // Conectar DynamoDB
         const table = getTable(process.env.PRODUCTOS_TABLE);
 
-        // Buscar producto por código y tenant_id
+        // Buscar producto por código y tenant_id usando las claves correctas de DynamoDB
         const key = {
-            codigo: codigo,
-            tenant_id: tenant_id
+            tenant_id: tenant_id,
+            SK: `producto#${codigo}`
         };
 
         const result = await getItem(table, key);
 
         if (result.error) {
             return createResponse(500, {
-                'error': result.error
+                success: false,
+                error: result.error
             });
         }
 
         if (!result.data) {
             return createResponse(404, {
-                'status': 'Producto no encontrado'
+                success: false,
+                error: 'Producto no encontrado'
             });
         }
 
@@ -107,7 +110,8 @@ const baseHandler = async (event, context) => {
         // Excepción y retornar un código de error HTTP 500
         console.error('Exception:', error);
         return createResponse(500, {
-            'error': error.message
+            success: false,
+            error: error.message
         });
     }
 };
