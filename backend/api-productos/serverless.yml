@@ -119,39 +119,39 @@ functions:
 resources:
   Resources:
     ProductosTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: p_productos-${self:provider.stage}
-        AttributeDefinitions:
-          - AttributeName: tenant_id
-            AttributeType: S
-          - AttributeName: SK
-            AttributeType: S
-          - AttributeName: categoria
-            AttributeType: S
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: p_productos-${self:provider.stage}
+    AttributeDefinitions:
+      - AttributeName: tenant_id
+        AttributeType: S
+      - AttributeName: SK
+        AttributeType: S
+      - AttributeName: categoria
+        AttributeType: S
+    KeySchema:
+      - AttributeName: tenant_id
+        KeyType: HASH
+      - AttributeName: SK
+        KeyType: RANGE
+    GlobalSecondaryIndexes:
+      - IndexName: TenantCategoriaIndex
         KeySchema:
           - AttributeName: tenant_id
             KeyType: HASH
-          - AttributeName: SK
+          - AttributeName: categoria
             KeyType: RANGE
-        GlobalSecondaryIndexes:
-          - IndexName: TenantCategoriaIndex
-            KeySchema:
-              - AttributeName: tenant_id
-                KeyType: HASH
-              - AttributeName: categoria
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-            BillingMode: PAY_PER_REQUEST
-        BillingMode: PAY_PER_REQUEST
-        StreamSpecification:
-          StreamViewType: NEW_AND_OLD_IMAGES
-        Tags:
-          - Key: Environment
-            Value: ${self:provider.stage}
-          - Key: Service
-            Value: api-productos
+        Projection:
+          ProjectionType: ALL
+    BillingMode: PAY_PER_REQUEST
+    StreamSpecification:
+      StreamViewType: NEW_AND_OLD_IMAGES
+    Tags:
+      - Key: Environment
+        Value: ${self:provider.stage}
+      - Key: Service
+        Value: api-productos
+
 
     # Bucket de Imágenes de Productos
     ImagenesProductosBucket:
