@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Minus, Plus, ArrowLeft } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 import foto1 from '../assets/lenovo.png';
 import foto2 from '../assets/lenovo2.png';
 import foto3 from '../assets/lenovo3.png';
@@ -85,9 +85,9 @@ const Cart: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen  pt-[40px] ">
+    <div className="min-h-screen pt-[40px] bg-gray-50 dark:bg-gray-900 theme-transition">
       <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <h2 className=" font-koulen text-[40px] mb-1">MY CART</h2>
+        <h2 className="font-koulen text-gray-900 dark:text-gray-100 text-[40px] mb-1 drop-shadow-sm">MY CART</h2>
       </div>
       <div className="max-w-20xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row items-start gap-10 justify-center ">
@@ -95,50 +95,47 @@ const Cart: React.FC = () => {
           {/* Cart Items */}
           <div className="flex-2 lg:col-span-2 mr-6">
             <div className="size-[600px] grow">
-              <p className="text-gray-600 font-jaldi mb-6">You have a total of {items.length} products.</p>
+              <p className="text-gray-600 dark:text-gray-400 font-jaldi mb-6">You have a total of {items.length} products.</p>
               
               <div className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-4   relative">
+                  <div key={item.id} className="flex items-center space-x-4 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg dark:shadow-2xl border border-gray-200 dark:border-gray-700 relative theme-transition">
                     
-                 
-
                     {/* Imagen del producto */}
-                    <div className="flex-shrink-0 ">
-                        <div className=" flex items-center justify-center">
+                    <div className="flex-shrink-0">
+                        <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                           <img
                             src={item.image}
                             alt={item.name}
                             className="w-40 h-40 object-contain"
                           />
                         </div>
-                      
                     </div>
                     
                     {/* Información del producto */}
                     <div className="flex-1 pr-8">
-                      <h3 className="font-lato font-bold text-black text-sm mb-4">{item.name}</h3>
-                      <div className="text-xs text-gray-600 space-y-1">
-                        <div className="font-lato">{item.color}</div>
-                        <div className='font-lato'>PEN {formatPrice(item.price)}</div>
-                        <div className='font-lato'>SKU {item.sku}</div>
+                      <h3 className="font-lato font-bold text-gray-900 dark:text-gray-100 text-sm mb-4">{item.name}</h3>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                        <div className="font-lato font-medium text-blue-600 dark:text-blue-400">{item.color}</div>
+                        <div className='font-lato font-semibold text-gray-900 dark:text-gray-100'>PEN {formatPrice(item.price)}</div>
+                        <div className='font-lato text-gray-500 dark:text-gray-500'>SKU {item.sku}</div>
                       </div>
 
                       {/* Controles de cantidad */}
-                    <div className="flex items-center font-jaldi space-x-2 mt-4 ">
+                    <div className="flex items-center font-jaldi space-x-2 mt-4">
                       <button
                         onClick={() => handleQuantityChange(item.id, -1)}
                         disabled={item.quantity <= 1}
-                        className="w-7 h-7 flex items-center justify-center bg-amarillo2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed  transition-colors duration-200"
+                        className="w-7 h-7 flex items-center justify-center bg-yellow-200 dark:bg-yellow-600 hover:bg-yellow-300 dark:hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 rounded-md"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-4 h-4 text-gray-700 dark:text-gray-100" />
                       </button>
-                      <span className="w-8 text-center font-jaldi text-[16px]">{item.quantity}</span>
+                      <span className="w-8 text-center font-jaldi text-[16px] text-gray-900 dark:text-gray-100 font-medium">{item.quantity}</span>
                       <button
                         onClick={() => handleQuantityChange(item.id, 1)}
-                        className="w-7 h-7 flex items-center justify-center bg-amarillo2 hover:bg-gray-50  transition-colors duration-200"
+                        className="w-7 h-7 flex items-center justify-center bg-yellow-200 dark:bg-yellow-600 hover:bg-yellow-300 dark:hover:bg-yellow-500 transition-colors duration-200 rounded-md"
                       >
-                        <Plus className=" w-4 h-4" />
+                        <Plus className="w-4 h-4 text-gray-700 dark:text-gray-100" />
                       </button>
                     </div>
                     </div>
@@ -146,10 +143,10 @@ const Cart: React.FC = () => {
                     {/* Botón de eliminar */}
                     <button
                       onClick={() => handleDeleteItem(item.id)}
-                      className="absolute top-3 right-2 w-8 h-8 flex items-center justify-center  hover: transition-colors duration-200"
+                      className="absolute top-3 right-2 w-8 h-8 flex items-center justify-center text-gray-400 dark:text-white hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors duration-200"
                       title="Eliminar producto"
                     >
-                      <svg className="w-5 h-5 text-black hover:text-red-600"  width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="18" y1="6" x2="6" y2="18" />  <line x1="6" y1="6" x2="18" y2="18" /></svg>
+                      <svg className="w-5 h-5" width="24" height="24" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" fill="none" strokeLinecap="round" strokeLinejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="18" y1="6" x2="6" y2="18" />  <line x1="6" y1="6" x2="18" y2="18" /></svg>
                     </button>
 
                   
@@ -158,10 +155,10 @@ const Cart: React.FC = () => {
 
                 {/* Mensaje si el carrito está vacío */}
                 {items.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="w-24 h-24 flex items-center justify-center mx-auto ">
+                  <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="w-24 h-24 flex items-center justify-center mx-auto">
                       <svg
-                        className="h-12 w-12 text-gray-400"
+                        className="h-12 w-12 text-gray-400 dark:text-gray-500"
                         width={24}
                         height={24}
                         viewBox="0 0 24 24"
@@ -177,8 +174,8 @@ const Cart: React.FC = () => {
                         <path d="M3 3h2l2 12a3 3 0 0 0 3 2h7a3 3 0 0 0 3-2l1-7h-15.2" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-faldi font-medium text-gray-900 mb-2">Your cart is empty</h3>
-                    <p className=" font-jaldi text-gray-500">Add some products to get started!</p>
+                    <h3 className="text-lg font-jaldi font-medium text-gray-900 dark:text-gray-100 mb-2">Your cart is empty</h3>
+                    <p className="font-jaldi text-gray-500 dark:text-gray-400">Add some products to get started!</p>
                   </div>
                 )}
                 
@@ -186,73 +183,73 @@ const Cart: React.FC = () => {
             </div>
           </div>
           
-          <div className=" w-px h-[750px] mx-0 bg-amarillo1"></div>
+          <div className="w-px h-[750px] mx-0 bg-yellow-400 dark:bg-yellow-500"></div>
           {/* Payment Information */}
           <div className="space-y-6">
             <div className="">
-              <h3 className="text-[32px] font-koulen text-black mb-4">PAYMENT INFORMATION</h3>
+              <h3 className="text-[32px] font-koulen text-gray-900 dark:text-gray-100 mb-4">PAYMENT INFORMATION</h3>
               
               <div className="space-y-4">
-                <div className="border-4 border-gray-600 rounded-lg p-[30px]">
+                <div className="border-4 border-gray-600 dark:border-gray-500 rounded-lg p-[30px] bg-white dark:bg-gray-800 theme-transition">
                   <div className='flex flex-row-reverse'>
-                  <div className=" h-2 bg-gray-300 w-[100px] mb-5 rounded "></div></div>
+                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-[100px] mb-5 rounded"></div></div>
                   <div className="flex justify-between items-center mb-2">
-                    <div className="w-9 h-7 bg-gray-800 rounded"></div>
+                    <div className="w-9 h-7 bg-gray-800 dark:bg-gray-600 rounded"></div>
                     <div className="text-right">
                       
                     </div>
                     
                   </div>
                   <div className="flex justify-between items-center mt-7">
-                  <div className="h-2 bg-gray-300 w-12 rounded"></div>
-                  <div className="h-2 bg-gray-300 w-12 rounded"></div>
-                  <div className="h-2 bg-gray-300 w-12 rounded"></div>
-                  <div className="h-2 bg-gray-300 w-12 rounded"></div>
+                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
                   </div>
-                  <div className="h-2 bg-gray-300 w-[150px] mt-3 rounded"></div>
+                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-[150px] mt-3 rounded"></div>
                 </div>
                 
                 <div >
-                  <label className="block text-[16px] font-lato font-bold text-gris2 mb-2">
+                  <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
                     NAME ON CARD
                   </label>
                   <input
                     type="text"
                     placeholder="Name on card"
-                    className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 focus:border-yellow-400 focus:outline-none placeholder-gray-500"
+                    className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 dark:border-gray-600 focus:border-yellow-400 dark:focus:border-yellow-500 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 theme-transition"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-[16px] font-lato font-bold text-gris2 mb-2">
+                  <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
                     CARD NUMBER
                   </label>
                   <input
                     type="text"
                     placeholder="Card number"
-                    className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 focus:border-yellow-400 focus:outline-none placeholder-gray-500"
+                    className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 dark:border-gray-600 focus:border-yellow-400 dark:focus:border-yellow-500 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 theme-transition"
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[16px] font-lato font-bold text-gris2 mb-2">
+                    <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
                       EXPIRATION DATE
                     </label>
                     <input
                       type="text"
                       placeholder="MM / YY"
-                      className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 focus:border-yellow-400 focus:outline-none placeholder-gray-500"
+                      className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 dark:border-gray-600 focus:border-yellow-400 dark:focus:border-yellow-500 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 theme-transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[16px] font-lato font-bold text-gris2 mb-2">
+                    <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
                       CVV
                     </label>
                     <input
                       type="text"
                       placeholder="CVV / Security code"
-                      className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 focus:border-yellow-400 focus:outline-none placeholder-gray-500"
+                      className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-300 dark:border-gray-600 focus:border-yellow-400 dark:focus:border-yellow-500 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 theme-transition"
                     />
                   </div>
                 </div>
@@ -261,29 +258,29 @@ const Cart: React.FC = () => {
             
             {/* Order Summary */}
             <div className="flex justify-between">
-              <div className="w-[100%] h-px bg-amarillo1 mt-2 mx-auto"></div>
+              <div className="w-[100%] h-px bg-yellow-400 dark:bg-yellow-500 mt-2 mx-auto"></div>
             </div>
 
             <div className="">
-              <h3 className="text-[20px] font-lato font-semibold text-black mb-4">ORDER SUMMARY</h3>
+              <h3 className="text-[20px] font-lato font-semibold text-gray-900 dark:text-gray-100 mb-4">ORDER SUMMARY</h3>
               
               <div className="space-y-3">
-                <div className="flex justify-between text-[14px] font-lato font-bold text-gris2">
-                  <span >SUBTOTAL</span>
+                <div className="flex justify-between text-[14px] font-lato font-bold text-gray-700 dark:text-gray-300">
+                  <span>SUBTOTAL</span>
                    <span>{formatPrice(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-[14px] font-lato font-bold text-gris2">
-                  <span >SHIPPING COSTS</span>
-                  <span >0,00</span>
+                <div className="flex justify-between text-[14px] font-lato font-bold text-gray-700 dark:text-gray-300">
+                  <span>SHIPPING COSTS</span>
+                  <span>0,00</span>
                 </div>
                 
-                <div className="flex justify-between text-[16px] text-black font-lato font-bold">
+                <div className="flex justify-between text-[16px] text-gray-900 dark:text-gray-100 font-lato font-bold">
                   <span>TOTAL</span>
                   <span>{formatPrice(total)}</span>
                 </div>
               </div>
               
-              <button className="w-full bg-black font-lato font-bold text-amarillo4 py-3 mt-6  tracking-widest hover:bg-amarillo2 hover:text-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300">
+              <button className="w-full bg-gray-900 dark:bg-gray-100 font-lato font-bold text-yellow-400 dark:text-gray-900 py-3 mt-6 tracking-widest hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-gray-900 dark:hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300 rounded-lg shadow-lg hover:shadow-xl">
                 CHECKOUT
               </button>
             </div>

@@ -5,6 +5,7 @@ module.exports = {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class', // Habilitar modo oscuro con clase
   theme: {
     extend: {
       fontFamily: {
@@ -23,7 +24,21 @@ module.exports = {
         amarillo3:  '#FFF0AD',
         amarillo4:  '#FDF7DD',
         gris:       '#F2F2F2',
-        gris2:      '#434343'
+        gris2:      '#434343',
+        // Colores para tema oscuro
+        dark: {
+          bg: {
+            primary: '#0f172a',
+            secondary: '#1e293b',
+            tertiary: '#334155',
+          },
+          text: {
+            primary: '#f8fafc',
+            secondary: '#cbd5e1',
+            muted: '#94a3b8',
+          },
+          border: '#334155',
+        }
       },
     },
   },

@@ -33,27 +33,28 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen  pt-[90px] ">
+    <div className="min-h-screen pt-[90px] bg-white dark:bg-gray-900 text-black dark:text-white theme-transition">
       <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-      <div className="flex justify-center items-center w-full">
-        <div className="w-[1100px] flex items-center justify-center">
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col lg:flex-row items-start gap-20 justify-center"
-          >
-            <h1 className="font-koulen font-bold text-left text-[57px] text-[#FCF7D5] mt-[15%] m-0 p-0">
+        <div className="flex justify-center items-center w-full">
+          <div className="w-[1100px] flex items-center justify-center">
+            <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-xl shadow-2xl theme-transition">
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col lg:flex-row items-start gap-20 justify-center"
+              >
+            <h1 className="font-koulen font-bold text-left text-[57px] text-yellow-500 dark:text-yellow-400 mt-[15%] m-0 p-0">
               Your Smart <br /> Tech <br />
               Journey <br /> Starts Here.
             </h1>
-            <div className=" mt-[15%] w-px h-80 mx-4 bg-white"></div>
+            <div className="mt-[15%] w-px h-80 mx-4 bg-gray-400 dark:bg-gray-600"></div>
             <section className="text-left">
-              <h1 className="font-koulen font-bold text-center text-[48px] text-white">
+              <h1 className="font-koulen font-bold text-center text-[48px] text-gray-800 dark:text-white">
                 Create An Account
               </h1>
 
               <div className="mt-3">
                 <div className="mb-3">
-                  <label className="ml-5 font-judson block text-[26px] font-medium text-white mb-1">
+                  <label className="ml-5 font-judson block text-[26px] font-medium text-gray-800 dark:text-gray-200 mb-1">
                     Name
                   </label>
                   <div className="flex items-center justify-center">
@@ -62,7 +63,7 @@ const Register: React.FC = () => {
                       onChange={(e) =>
                         setUserData({ ...userData, nombre: e.target.value })
                       }
-                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
+                      className="w-[472px] p-3 pl-5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-jaldi italic placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 theme-transition"
                       placeholder="Enter your name"
                       required
                     />
@@ -70,7 +71,7 @@ const Register: React.FC = () => {
                 </div>
 
                 <div className="mb-3">
-                  <label className="ml-5 font-judson block text-[26px] font-medium text-white mb-1">
+                  <label className="ml-5 font-judson block text-[26px] font-medium text-gray-800 dark:text-gray-200 mb-1">
                     Email
                   </label>
                   <div className="flex items-center justify-center">
@@ -79,7 +80,7 @@ const Register: React.FC = () => {
                       onChange={(e) =>
                         setUserData({ ...userData, email: e.target.value })
                       }
-                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
+                      className="w-[472px] p-3 pl-5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-jaldi italic placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 theme-transition"
                       placeholder="Enter your email"
                       type="email"
                       required
@@ -88,7 +89,7 @@ const Register: React.FC = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="ml-5 font-judson block text-[26px] font-medium text-white mb-1">
+                  <label className="ml-5 font-judson block text-[26px] font-medium text-gray-800 dark:text-gray-200 mb-1">
                     Password
                   </label>
                   <div className="flex items-center justify-center">
@@ -97,7 +98,7 @@ const Register: React.FC = () => {
                       onChange={(e) =>
                         setUserData({ ...userData, password: e.target.value })
                       }
-                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
+                      className="w-[472px] p-3 pl-5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-jaldi italic placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 theme-transition"
                       placeholder="Enter your password"
                       type="password"
                       required
@@ -106,7 +107,7 @@ const Register: React.FC = () => {
                 </div>
 
                 <div className="mb-6">
-                  <label className="ml-5 font-judson block text-[26px] font-medium text-white mb-1">
+                  <label className="ml-5 font-judson block text-[26px] font-medium text-gray-800 dark:text-gray-200 mb-1">
                     Tenant ID
                   </label>
                   <div className="flex items-center justify-center">
@@ -115,7 +116,7 @@ const Register: React.FC = () => {
                       onChange={(e) =>
                         setUserData({ ...userData, tenant_id: e.target.value })
                       }
-                      className="w-[472px] p-3 pl-5 bg-[#D9D9D9] text-primary font-jaldi italic placeholder-[#6D6D6D]"
+                      className="w-[472px] p-3 pl-5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-jaldi italic placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 theme-transition"
                       placeholder="Enter your tenant ID"
                       type="text"
                       required
@@ -133,17 +134,18 @@ const Register: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="pb-8 font-koulen text-[30px] bg-transparent border-none outline-none text-amarillo3 hover:underline transition duration-200 disabled:opacity-50"
+                    className="pb-8 font-koulen text-[30px] bg-transparent border-none outline-none text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-300 hover:underline transition duration-200 disabled:opacity-50"
                   >
                     {loading ? "REGISTERING..." : "Register"}
                   </button>
                 </div>
               </div>
-            </section>
-          </form>
+              </section>
+            </form>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

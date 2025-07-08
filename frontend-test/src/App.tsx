@@ -8,8 +8,9 @@ import {
 } from 'react-router-dom';
 
 import Navbar   from './components/Navbar';
-import NavbarA  from './components/NavbarA';
+import NavbarAuth  from './components/NavbarAuth';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeContext, useThemeState } from './hooks/useTheme';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home     from './pages/Home';
 import Login    from './pages/Login';
@@ -24,14 +25,10 @@ import ViewOrder from './pages/ViewOrder';
 const AppLayout: React.FC = () => {
   const { pathname } = useLocation();
 
-  // Definimos las rutas que deben ser de fondo negro
-  const blackPages = ['/', '/login', '/register'];
-  const isBlack = blackPages.includes(pathname);
-
   return (
-    <div className={`${isBlack ? 'bg-black text-white' : 'bg-white text-black'} min-h-screen`}>
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white theme-transition">
       {/* Elegimos el Navbar apropiado */}
-      {['/login', '/register'].includes(pathname) ? <NavbarA /> : <Navbar />}
+      {['/login', '/register'].includes(pathname) ? <NavbarAuth /> : <Navbar />}
 
       <div className="pt-16">
         <Routes>
@@ -83,11 +80,21 @@ const AppLayout: React.FC = () => {
 export default function App() {
   return (
     <Router>
-      <AuthProvider>
-        
-        <AppLayout />
-        
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppLayout />
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }
+
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const themeState = useThemeState();
+  
+  return (
+    <ThemeContext.Provider value={themeState}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};

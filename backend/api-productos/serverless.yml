@@ -118,12 +118,3 @@ resources:
                 - s3:GetObject
               Resource: !Sub "arn:aws:s3:::imagenes-productos-${self:provider.stage}/*"
 
-# Instrucciones de despliegue de Elasticsearch en EC2 (fuera de Serverless):
-# Ejecutar en la instancia EC2 con AWS Academy usando Docker:
-# mkdir -p /home/ec2-user/es-data
-# docker run -d --name elasticsearch \
-#   -p 9200:9200 -p 9300:9300 \
-#   -e "discovery.type=single-node" \
-#   -e "ES_JAVA_OPTS=-Xms2g -Xmx2g" \
-#   -v /home/ec2-user/es-data:/usr/share/elasticsearch/data \
-#   docker.elastic.co/elasticsearch/elasticsearch:8.8.1

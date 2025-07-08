@@ -4,12 +4,25 @@
   <meta charset="UTF-8" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Elektra</title>
+  <title>Multi-Tenant E-Commerce</title>
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <!-- ✅ Fonts (una sola vez) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&family=Jomhuria&family=Judson:ital,wght@0,400;0,700;1,400&family=Koulen&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Rubik+Glitch&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Jaldi:wght@400;700&family=Jomhuria&family=Judson:ital,wght@0,400;0,700;1,400&family=Koulen&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Rubik+Glitch&display=swap" rel="stylesheet">
+  
+  <!-- Script para detectar tema antes de que React cargue -->
+  <script>
+    // Detectar tema guardado o preferencia del sistema
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+    
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.tsx"></script>

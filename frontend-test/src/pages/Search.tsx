@@ -249,10 +249,10 @@ const Search: React.FC = () => {
   };
 
   return (
-    <div className="w-[100%] max-w-none mx-auto px-7">
+    <div className="w-[100%] max-w-none mx-auto px-7 bg-gray-50 dark:bg-gray-900 min-h-screen theme-transition">
       {/* Header con buscador */}
-      <div className="bg-white mt-7 ">
-        <div className="max-w-7xl mx-auto px-4 py-2">
+      <div className="bg-white dark:bg-gray-800 mt-7 rounded-xl shadow-lg dark:shadow-2xl theme-transition">
+        <div className="max-w-7xl mx-auto px-4 py-6">
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
             <div className="relative">
               <input
@@ -260,10 +260,10 @@ const Search: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="w-full px-4 py-3 pl-12 border border-black font-jaldi rounded-full focus:outline-none focus:ring-2 focus:ring-amarillo1 focus:border-transparent"
+                className="w-full px-4 py-3 pl-12 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-jaldi rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 focus:border-transparent placeholder-gray-500 dark:placeholder-gray-400 theme-transition"
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -286,11 +286,11 @@ const Search: React.FC = () => {
         <div className="flex-1 p-6">
           {/* Resultados info */}
           <div className="mt-6 mb-2">
-            <p className="text-gray-600 text-[16px] font-jaldi">
+            <p className="text-gray-600 dark:text-gray-400 text-[16px] font-jaldi">
               Showing {((currentPage - 1) * productsPerPage) + 1}-{Math.min(currentPage * productsPerPage, filteredProducts.length)} of {filteredProducts.length} results
             </p>
           </div>
-          <div className="w-95 h-px bg-amarillo1 mb-2"></div>
+          <div className="w-95 h-px bg-yellow-400 dark:bg-yellow-500 mb-2"></div>
           {/* Grid de productos */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8 ">
             {paginatedProducts.map((product) => (

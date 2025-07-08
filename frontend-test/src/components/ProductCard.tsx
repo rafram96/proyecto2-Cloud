@@ -27,7 +27,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div 
-      className="bg-white hover:shadow-lg transition-shadow duration-300 cursor-pointer w-[255px] h-[303px] "
+      className="bg-white dark:bg-gray-800 hover:shadow-lg dark:hover:shadow-2xl transition-shadow duration-300 cursor-pointer w-[255px] h-[303px] border border-gray-200 dark:border-gray-700 rounded-lg theme-transition"
       onClick={handleProductClick}
     >
       <div className="relative">
@@ -39,21 +39,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <img
           src={product.image}
           alt={product.name}
-          className="mx-auto w-48 h-48 object-cover "
+          className="mx-auto w-48 h-48 object-cover rounded-t-lg"
         />
       </div>
       
       <div className="p-4">
-        <h3 className="text-sm font-lato  text-black mb-2 line-clamp-2">
+        <h3 className="text-sm font-lato text-black dark:text-white mb-2 line-clamp-2">
           {product.name}
         </h3>
         
         <div className="flex items-center space-x-2">
-          <span className="text-lg font-lato font-bold text-black">
+          <span className="text-lg font-lato font-bold text-black dark:text-white">
             {formatPrice(product.price)}
           </span>
           {product.originalPrice && (
-            <span className="text-sm font-lato text-gray-500 line-through">
+            <span className="text-sm font-lato text-gray-500 dark:text-gray-400 line-through">
               {formatPrice(product.originalPrice)}
             </span>
           )}

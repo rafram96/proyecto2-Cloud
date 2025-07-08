@@ -17,7 +17,7 @@ const CategoryButtons: FC<CategoryButtonsProps> = ({ icon, label }) => {
   return (
     <button
       onClick={handleClick}
-      className="flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-white text-black hover:scale-105 transition transform duration-200 shadow-md"
+      className="flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-white dark:bg-gray-700 text-black dark:text-white hover:scale-105 transition transform duration-200 shadow-md hover:shadow-lg theme-transition"
       aria-label={label}
     >
       {icon}

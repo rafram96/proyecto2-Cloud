@@ -32,7 +32,7 @@ const sampleProducts = [
 
 const Home: React.FC = () => {
   return (
-    <div className="flex flex-col  justify-items-center min-h-screen bg-black text-white">
+    <div className="flex flex-col justify-items-center min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white theme-transition">
       <div className="">
           <section
             className="relative flex items-center justify-center text-center"
@@ -43,9 +43,9 @@ const Home: React.FC = () => {
               height: '600px', // Usa height en lugar de minHeight
             }}
           >
-            <div className="absolute inset-0 bg-black opacity-50"></div>
+            <div className="absolute inset-0 bg-black opacity-50 dark:opacity-70"></div>
             <div className="relative z-10 flex flex-col items-center justify-center">
-              <h1 className="font-koulen font-bold text-[128px] text-white">
+              <h1 className="font-koulen font-bold text-[128px] text-white drop-shadow-lg">
                 Up to 30% off laptops
               </h1>
               <ShopNowButton />
@@ -53,7 +53,7 @@ const Home: React.FC = () => {
           </section>
         </div>
         <section className="text-center mt-20">
-          <h3 className="font-koulen text-[32px] text-white">popular categories</h3>
+          <h3 className="font-koulen text-[32px] text-gray-800 dark:text-white">popular categories</h3>
         </section>
         <section className="flex flex-wrap justify-center mt-10 gap-6">
           {categories.map((category) => (
@@ -64,8 +64,8 @@ const Home: React.FC = () => {
             />
           ))}
         </section>
-        <section className="text-center text-white mt-20">
-          <h2 className="font-koulen text-[32px]  mb-6">TRENDING PRODUCTS</h2>
+        <section className="text-center mt-20">
+          <h2 className="font-koulen text-[32px] text-gray-800 dark:text-white mb-6">TRENDING PRODUCTS</h2>
           <div className="flex flex-wrap justify-center gap-6">
             {sampleProducts.map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -81,8 +81,8 @@ const Home: React.FC = () => {
             ))}
           </div>
         </section>
-        <section className="text-center text-white mt-16">
-          <h2 className="font-koulen text-[32px]  mb-6">NEW PRODUCTS</h2>
+        <section className="text-center mt-16">
+          <h2 className="font-koulen text-[32px] text-gray-800 dark:text-white mb-6">NEW PRODUCTS</h2>
           <div className="flex flex-wrap justify-center gap-6">
             {sampleProducts.map((p) => (
             <ProductCard key={p.id} product={p} />

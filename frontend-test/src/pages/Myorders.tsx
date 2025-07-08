@@ -1,5 +1,4 @@
 import React from 'react';
-import foto1 from '../assets/lenovo.png';
 import foto2 from '../assets/lenovo2.png';
 import foto3 from '../assets/lenovo3.png';
 import foto4 from '../assets/lenovo4.png'; 
@@ -21,23 +20,23 @@ const orders = [
 
 const Myorders: React.FC = () => {
   return (
-    <div className="min-h-screen  pt-[40px] font-lato ">
+    <div className="min-h-screen pt-[40px] font-lato bg-gray-50 dark:bg-gray-900 theme-transition">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="font-koulen text-black text-[40px] mb-12">MY ORDERS</h1>
+      <h1 className="font-koulen text-gray-900 dark:text-gray-100 text-[40px] mb-12 drop-shadow-sm">MY ORDERS</h1>
 
       <div className="flex flex-col gap-16">
         {orders.map((order, index) => (
           <div
             key={index}
-            className="flex justify-between gap-10 border-b border-[#dcdcdc] pb-10"
+            className="flex justify-between gap-10 border-b border-gray-300 dark:border-gray-600 pb-10 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg dark:shadow-2xl theme-transition"
           >
             {/* Columna izquierda: estado, total y enlace */}
-            <div className="w-1/4 flex flex-col gap-5 self-end text-gris2 text-[14px] font-lato text-[#434343]">
-              <p className="uppercase">{order.status}</p>
-              <p className="font-semibold">{order.total}</p>
+            <div className="w-1/4 flex flex-col gap-5 self-end text-gray-700 dark:text-gray-300 text-[14px] font-lato">
+              <p className="uppercase font-medium text-blue-600 dark:text-blue-400">{order.status}</p>
+              <p className="font-semibold text-lg text-gray-900 dark:text-gray-100">{order.total}</p>
               <a
                 href={`/view-order/${order.id}`}
-                className="underline text-[#434343] hover:text-amarillo1 transition-colors duration-200"
+                className="underline text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 font-medium"
               >
                 View Order
               </a>
@@ -47,12 +46,12 @@ const Myorders: React.FC = () => {
               {order.products.map((src, idx) => (
                 <div
                   key={idx}
-                  className="w-70 h-[200px] flex items-center justify-center"
+                  className="w-70 h-[200px] flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-md dark:hover:shadow-xl theme-transition"
                 >
                   <img
                     src={src}
                     alt={`Producto ${idx + 1}`}
-                    className="object-contain "
+                    className="object-contain max-h-[180px] rounded-md"
                   />
                 </div>
               ))}
