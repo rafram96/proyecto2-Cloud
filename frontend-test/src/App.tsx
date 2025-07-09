@@ -19,7 +19,6 @@ import Cart     from './pages/Mycart';
 import Orders   from './pages/Myorders';
 import Product  from './pages/Product';
 import Search   from './pages/Search';
-import CreateProduct from './pages/CreateProduct';
 import MyProducts from './pages/MyProducts';
 import ViewOrder from './pages/ViewOrder';
 
@@ -35,11 +34,6 @@ const AppLayout: React.FC = () => {
         <Routes>
           <Route path="/login"   element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/create-product" element={
-            <ProtectedRoute>
-            <CreateProduct />
-            </ProtectedRoute>
-            } />
           <Route path="/view-order" element={
             <ProtectedRoute>
               <ViewOrder />
