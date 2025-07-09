@@ -147,7 +147,7 @@ functions:
           arn: !GetAtt ProductosTable.StreamArn
           startingPosition: LATEST
           batchSize: 10
-          maximumBatchingWindowInSeconds: 5
+          batchWindow: 5
 
   searchProducts:
     handler: src/handlers/searchProducts.lambda_handler
