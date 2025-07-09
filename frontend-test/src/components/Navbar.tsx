@@ -10,6 +10,7 @@ const Navbar: React.FC = () => {
   const handleHome = () => navigate('/');
   const handleCart = () => navigate('/cart');
   const handleOrders = () => navigate('/orders');
+  const handleMyProducts = () => navigate('/my-products');
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -39,6 +40,12 @@ const Navbar: React.FC = () => {
           className="font-jaldi text-[18px] bg-transparent border-none outline-none transition duration-300 text-gray-200 dark:text-gray-300 hover:text-yellow-400 dark:hover:text-yellow-300 px-3 py-1 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-800"
         >
           My Orders
+        </button>
+        <button 
+          onClick={handleMyProducts} 
+          className="font-jaldi text-[18px] bg-transparent border-none outline-none transition duration-300 text-gray-200 dark:text-gray-300 hover:text-yellow-400 dark:hover:text-yellow-300 px-3 py-1 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-800"
+        >
+          My Products
         </button>
         <button
           onClick={handleCart}

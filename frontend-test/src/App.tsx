@@ -20,6 +20,7 @@ import Orders   from './pages/Myorders';
 import Product  from './pages/Product';
 import Search   from './pages/Search';
 import CreateProduct from './pages/CreateProduct';
+import MyProducts from './pages/MyProducts';
 import ViewOrder from './pages/ViewOrder';
 
 const AppLayout: React.FC = () => {
@@ -58,6 +59,11 @@ const AppLayout: React.FC = () => {
           <Route path="/orders" element={
             <ProtectedRoute>
               <Orders />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-products" element={
+            <ProtectedRoute>
+              <MyProducts />
             </ProtectedRoute>
           } />
           <Route path="/product/:id" element={

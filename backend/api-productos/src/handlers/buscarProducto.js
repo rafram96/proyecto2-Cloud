@@ -8,7 +8,7 @@ const { getItem, getTable } = require('../utils/dynamodb');
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id,X-Amz-Date,X-Api-Key,X-Amz-Security-Token',
     'Access-Control-Allow-Methods': 'OPTIONS,POST',
     'Content-Type': 'application/json'
 };

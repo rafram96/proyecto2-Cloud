@@ -1,6 +1,7 @@
 import { request } from './request';
 
 interface ProductData {
+  codigo: string;
   nombre: string;
   descripcion: string;
   precio: number;

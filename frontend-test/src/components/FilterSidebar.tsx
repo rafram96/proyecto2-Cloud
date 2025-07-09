@@ -48,52 +48,52 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   };
 
   return (
-    <div className="w-64 p-6 h-full bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl theme-transition">
-      <h2 className="text-[32px] font-koulen font-bold mb-2 text-gray-900 dark:text-gray-100">FILTER OPTIONS</h2>
-      <div className="w-60 h-px bg-yellow-400 dark:bg-yellow-500 mb-2"></div>
+    <div className="w-full lg:w-64 p-4 lg:p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl theme-transition">
+      <h2 className="text-[28px] lg:text-[32px] font-koulen font-bold mb-2 text-gray-900 dark:text-gray-100">FILTER OPTIONS</h2>
+      <div className="w-full h-px bg-yellow-400 dark:bg-yellow-500 mb-4"></div>
       
       {/* Categories Filter */}
-      <div className="mb-8">
-        <h3 className="text-[24px] font-jaldi font-semibold mb-2 text-gray-900 dark:text-gray-100">By Categories</h3>
-        <div className="space-y-3">
+      <div className="mb-6 lg:mb-8">
+        <h3 className="text-[20px] lg:text-[24px] font-jaldi font-semibold mb-3 text-gray-900 dark:text-gray-100">By Categories</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:gap-3">
           {categories.map((category) => (
             <label key={category} className="flex items-center cursor-pointer group">
               <input
                 type="checkbox"
-                className="appearance-none w-4 h-4 border-2 border-yellow-400 dark:border-yellow-500 rounded-sm checked:bg-gray-900 dark:checked:bg-gray-100 checked:border-gray-900 dark:checked:border-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 transition duration-150"
+                className="appearance-none w-4 h-4 border-2 border-yellow-400 dark:border-yellow-500 rounded-sm checked:bg-gray-900 dark:checked:bg-gray-100 checked:border-gray-900 dark:checked:border-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 transition duration-150 flex-shrink-0"
                 checked={category === 'All' ? selectedCategories.length === 0 : selectedCategories.includes(category)}
                 onChange={() => handleCategoryChange(category)}
               />
-              <span className="ml-3 text-gray-900 dark:text-gray-100 font-jaldi group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors duration-200">{category}</span>
+              <span className="ml-3 text-sm lg:text-base text-gray-900 dark:text-gray-100 font-jaldi group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors duration-200">{category}</span>
             </label>
           ))}
         </div>
       </div>
 
       {/* Price Filter */}
-      <div className="w-60 h-px bg-yellow-400 dark:bg-yellow-500 mb-3"></div>
+      <div className="w-full h-px bg-yellow-400 dark:bg-yellow-500 mb-4"></div>
       <div>
-        <h3 className="text-[24px] font-jaldi font-semibold mb-3 text-gray-900 dark:text-gray-100">Price</h3>
+        <h3 className="text-[20px] lg:text-[24px] font-jaldi font-semibold mb-3 text-gray-900 dark:text-gray-100">Price</h3>
         <div className="mb-4">
-          <div className="flex items-center mb-4">
+          <div className="flex items-center justify-center lg:justify-start mb-4 gap-2">
             <span className="text-[17px] font-jaldi text-gray-900 dark:text-gray-100">S/.</span>
             <input
               type="number"
               name="min"
               value={priceRange.min}
               onChange={handlePriceChange}
-              className="w-15 text-[15px] px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 theme-transition"
+              className="w-16 lg:w-15 text-[15px] px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 theme-transition"
               min="100"
               max={priceRange.max - 100}
             />
-            <span className="text-[17px] font-jaldi text-gray-900 dark:text-gray-100 mx-2">-</span>
-            <span className="text-[17px] ml-6 font-jaldi text-gray-900 dark:text-gray-100">S/.</span>
+            <span className="text-[17px] font-jaldi text-gray-900 dark:text-gray-100">-</span>
+            <span className="text-[17px] font-jaldi text-gray-900 dark:text-gray-100">S/.</span>
             <input
               type="number"
               name="max"
               value={priceRange.max}
               onChange={handlePriceChange}
-              className="w-15 text-[15px] px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 theme-transition"
+              className="w-16 lg:w-15 text-[15px] px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 theme-transition"
               min={priceRange.min + 100}
               max="4000"
             />

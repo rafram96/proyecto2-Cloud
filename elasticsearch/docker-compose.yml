@@ -1,0 +1,20 @@
+services:
+  elasticsearch:
+    image: elasticsearch:9.0.2
+    container_name: elasticsearch
+    ports:
+      - "0.0.0.0:9400:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
+      - network.host=0.0.0.0  
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data  
+      - elasticsearch_config:/usr/share/elasticsearch/config  
+    restart: unless-stopped
+
+volumes:
+  elasticsearch_data:    
+  elasticsearch_config:

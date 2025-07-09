@@ -22,6 +22,7 @@ provider:
   environment:
     PRODUCTOS_TABLE: p_productos-${self:provider.stage}
     JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
+    ELASTICSEARCH_URL: http://44.198.72.193:9400
     STAGE: ${self:provider.stage}
     IMAGES_BUCKET: imagenes-productos-${self:provider.stage}
 
@@ -38,8 +39,24 @@ functions:
               - Content-Type
               - Authorization
               - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
             allowCredentials: false
           integration: lambda
+      - http:
+          path: /productos/crear
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
           
   listar:
     handler: src/handlers/listarProductos.lambda_handler
@@ -53,8 +70,24 @@ functions:
               - Content-Type
               - Authorization
               - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
             allowCredentials: false
           integration: lambda
+      - http:
+          path: /productos/listar
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
           
   buscar:
     handler: src/handlers/buscarProducto.lambda_handler
@@ -68,8 +101,24 @@ functions:
               - Content-Type
               - Authorization
               - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
             allowCredentials: false
           integration: lambda
+      - http:
+          path: /productos/buscar
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
           
   actualizar:
     handler: src/handlers/actualizarProducto.lambda_handler
@@ -83,8 +132,24 @@ functions:
               - Content-Type
               - Authorization
               - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
             allowCredentials: false
           integration: lambda
+      - http:
+          path: /productos/actualizar
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
           
   eliminar:
     handler: src/handlers/eliminarProducto.lambda_handler
@@ -98,8 +163,24 @@ functions:
               - Content-Type
               - Authorization
               - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
             allowCredentials: false
           integration: lambda
+      - http:
+          path: /productos/eliminar
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
           
   upload-image:
     handler: src/handlers/uploadImage.lambda_handler
@@ -113,8 +194,24 @@ functions:
               - Content-Type
               - Authorization
               - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
             allowCredentials: false
           integration: lambda
+      - http:
+          path: /productos/upload-image
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
 
 resources:
   Resources:
