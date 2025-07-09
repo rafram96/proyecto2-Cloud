@@ -14,25 +14,21 @@ interface ProductData {
 export const productService = {
   async uploadImage(file: File, tenantId: string): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('tenant_id', tenantId);
+      // Convertir archivo a Base64 para evitar multipart/form-data
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = btoa(
+        Array.from(new Uint8Array(arrayBuffer))
+          .map(byte => String.fromCharCode(byte))
+          .join('')
+      );
+      const mimeType = file.type || 'image/jpeg';
+      const payload = { base64, mimeType }; // tenantId se obtiene desde requestProducts
 
-      const response = await fetch(`${import.meta.env.VITE_PRODUCTS_API_URL}/productos/upload-image`, {
+      const data = await requestProducts<any>('/productos/upload-image', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'X-Tenant-Id': tenantId,
-        },
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al subir imagen');
-      }
-
-      const data = await response.json();
       return { success: true, data: data.data };
     } catch (error: any) {
       return { success: false, error: error.message || 'Error al subir imagen' };

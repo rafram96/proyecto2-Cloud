@@ -27,42 +27,35 @@ const baseHandler = async (event, context) => {
         const userContext = event.userContext;
         const tenantId = userContext.tenant_id;
 
-        // Parse multipart form data
-        const body = event.body;
-        const boundary = event.headers['content-type']?.split('boundary=')[1] || 
-                        event.headers['Content-Type']?.split('boundary=')[1];
-        
-        if (!body || !boundary) {
-            return {
-                statusCode: 400,
-                headers: corsHeaders,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'No se encontró archivo de imagen'
-                })
-            };
-        }
+        // Handle JSON payload with base64
+        const contentTypeHeader = event.headers['Content-Type'] || event.headers['content-type'];
+        let imageBuffer;
+        let finalContentType;
 
-        // Extract image data from multipart form
-        const parts = body.split(`--${boundary}`);
-        let imageBuffer = null;
-        let contentType = 'image/jpeg';
-
-        for (const part of parts) {
-            if (part.includes('Content-Disposition: form-data; name="image"')) {
-                const lines = part.split('\r\n');
-                const contentTypeIndex = lines.findIndex(line => line.includes('Content-Type:'));
-                if (contentTypeIndex !== -1) {
-                    contentType = lines[contentTypeIndex].split('Content-Type: ')[1];
+        if (contentTypeHeader && contentTypeHeader.includes('application/json')) {
+            // Parse base64 JSON
+            const { base64, mimeType } = JSON.parse(event.body);
+            imageBuffer = Buffer.from(base64, 'base64');
+            finalContentType = mimeType;
+        } else {
+            // Parse multipart form data (legacy)
+            const body = event.body;
+            const boundary = contentTypeHeader.split('boundary=')[1];
+            const parts = body.split(`--${boundary}`);
+            imageBuffer = null;
+            finalContentType = 'image/jpeg';
+            for (const part of parts) {
+                if (part.includes('Content-Disposition: form-data; name="image"')) {
+                    const lines = part.split('\r\n');
+                    const ctIndex = lines.findIndex(line => line.includes('Content-Type:'));
+                    if (ctIndex !== -1) finalContentType = lines[ctIndex].split('Content-Type: ')[1];
+                    const emptyIndex = lines.findIndex(line => line === '');
+                    if (emptyIndex !== -1) {
+                        const imageData = lines.slice(emptyIndex + 1).join('\r\n');
+                        imageBuffer = Buffer.from(imageData, 'binary');
+                    }
+                    break;
                 }
-                
-                // Get binary data (after headers)
-                const emptyLineIndex = lines.findIndex(line => line === '');
-                if (emptyLineIndex !== -1) {
-                    const imageData = lines.slice(emptyLineIndex + 1).join('\r\n');
-                    imageBuffer = Buffer.from(imageData, 'binary');
-                }
-                break;
             }
         }
 
@@ -70,15 +63,12 @@ const baseHandler = async (event, context) => {
             return {
                 statusCode: 400,
                 headers: corsHeaders,
-                body: JSON.stringify({
-                    success: false,
-                    error: 'No se pudo procesar la imagen'
-                })
+                body: JSON.stringify({ success: false, error: 'No se pudo procesar la imagen' })
             };
         }
 
         // Generate unique filename
-        const fileExtension = contentType.split('/')[1] || 'jpg';
+        const fileExtension = finalContentType.split('/')[1] || 'jpg';
         const fileName = `${tenantId}/${uuidv4()}.${fileExtension}`;
         const bucketName = process.env.IMAGES_BUCKET;
 
@@ -87,7 +77,7 @@ const baseHandler = async (event, context) => {
             Bucket: bucketName,
             Key: fileName,
             Body: imageBuffer,
-            ContentType: contentType,
+            ContentType: finalContentType,
             ACL: 'public-read'
         };
 

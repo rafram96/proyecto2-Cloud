@@ -68,7 +68,8 @@ const baseHandler = async (event, context) => {
                  ':activo': true
              },
              FilterExpression: 'activo = :activo',
-             Limit: limit
+             Limit: limit,
+             ConsistentRead: true
          };
 
          // Filtro por categoría
