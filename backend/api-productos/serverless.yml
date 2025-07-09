@@ -4,12 +4,13 @@ service: api-productos
 package:
   individually: true
   patterns:
-    - '!node_modules/**'
     - '!*.zip'
     - '!*.tar.gz'
     - '!.git/**'
     - '!.vscode/**'
     - '!*.md'
+    - '!coverage/**'
+    - '!.nyc_output/**'
 
 provider:
   name: aws
