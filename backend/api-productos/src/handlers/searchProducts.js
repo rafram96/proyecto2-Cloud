@@ -17,12 +17,18 @@ exports.lambda_handler = async (event) => {
     }
 
     try {
-        const tenantId = event.headers['X-Tenant-Id'] || event.queryStringParameters?.tenant_id;
-        const query = event.queryStringParameters?.q || '';
-        const fuzzy = event.queryStringParameters?.fuzzy === 'true';
-        const categoria = event.queryStringParameters?.categoria;
-        const minPrice = event.queryStringParameters?.min_price;
-        const maxPrice = event.queryStringParameters?.max_price;
+        const tenantId = event.headers['X-Tenant-Id'] || event.headers['x-tenant-id'];
+        
+        let requestBody = {};
+        if (event.body) {
+            requestBody = JSON.parse(event.body);
+        }
+        
+        const query = requestBody.query || '';
+        const filters = requestBody.filters || {};
+        const sort = requestBody.sort || 'relevance';
+        const page = requestBody.page || 1;
+        const limit = requestBody.limit || 20;
         
         if (!tenantId) {
             return {
@@ -33,11 +39,11 @@ exports.lambda_handler = async (event) => {
         }
 
         const indexName = `products-${tenantId}`;
-        const searchQuery = buildSearchQuery(query, fuzzy, categoria, minPrice, maxPrice);
+        const searchQuery = buildSearchQuery(query, filters, sort, page, limit);
         
         console.log('Searching ES with query:', JSON.stringify(searchQuery, null, 2));
         
-        const results = await searchES(indexName, searchQuery);
+        const results = await searchES(indexName, searchQuery, sort, page, limit);
         
         return {
             statusCode: 200,
@@ -47,7 +53,9 @@ exports.lambda_handler = async (event) => {
                 data: {
                     productos: results.hits.hits.map(hit => hit._source),
                     total: results.hits.total.value,
-                    took: results.took
+                    took: results.took,
+                    page,
+                    limit
                 }
             })
         };
@@ -65,7 +73,7 @@ exports.lambda_handler = async (event) => {
     }
 };
 
-const buildSearchQuery = (query, fuzzy, categoria, minPrice, maxPrice) => {
+const buildSearchQuery = (query, filters = {}, sort = 'relevance', page = 1, limit = 20) => {
     const must = [];
     const filter = [];
     
@@ -73,38 +81,33 @@ const buildSearchQuery = (query, fuzzy, categoria, minPrice, maxPrice) => {
     filter.push({ term: { activo: true } });
     
     // Búsqueda de texto
-    if (query) {
-        if (fuzzy) {
-            must.push({
-                multi_match: {
-                    query: query,
-                    fields: ['nombre^3', 'descripcion^2', 'tags'],
-                    fuzziness: 'AUTO',
-                    type: 'best_fields'
-                }
-            });
-        } else {
-            must.push({
-                multi_match: {
-                    query: query,
-                    fields: ['nombre^3', 'descripcion^2', 'tags'],
-                    type: 'best_fields'
-                }
-            });
-        }
+    if (query && query.trim()) {
+        must.push({
+            multi_match: {
+                query: query,
+                fields: ['nombre^3', 'descripcion^2', 'tags'],
+                fuzziness: 'AUTO',
+                type: 'best_fields'
+            }
+        });
     }
     
     // Filtro por categoría
-    if (categoria) {
-        filter.push({ term: { categoria: categoria } });
+    if (filters.categoria) {
+        filter.push({ term: { categoria: filters.categoria } });
     }
     
     // Filtro por precio
-    if (minPrice || maxPrice) {
+    if (filters.precio_min || filters.precio_max) {
         const priceRange = {};
-        if (minPrice) priceRange.gte = parseFloat(minPrice);
-        if (maxPrice) priceRange.lte = parseFloat(maxPrice);
+        if (filters.precio_min) priceRange.gte = parseFloat(filters.precio_min);
+        if (filters.precio_max) priceRange.lte = parseFloat(filters.precio_max);
         filter.push({ range: { precio: priceRange } });
+    }
+    
+    // Filtro por tags
+    if (filters.tags && filters.tags.length > 0) {
+        filter.push({ terms: { tags: filters.tags } });
     }
     
     if (must.length === 0 && filter.length === 1) {
@@ -120,15 +123,42 @@ const buildSearchQuery = (query, fuzzy, categoria, minPrice, maxPrice) => {
     };
 };
 
-const searchES = async (indexName, query) => {
+const searchES = async (indexName, query, sort = 'relevance', page = 1, limit = 20) => {
     const url = `${ES_URL}/${indexName}/_search`;
+    
+    // Calcular offset para paginación
+    const from = (page - 1) * limit;
+    
+    // Configurar ordenamiento
+    let sortConfig = [{ _score: { order: 'desc' } }];
+    
+    switch (sort) {
+        case 'price_asc':
+            sortConfig = [{ precio: { order: 'asc' } }];
+            break;
+        case 'price_desc':
+            sortConfig = [{ precio: { order: 'desc' } }];
+            break;
+        case 'name_asc':
+            sortConfig = [{ 'nombre.keyword': { order: 'asc' } }];
+            break;
+        case 'name_desc':
+            sortConfig = [{ 'nombre.keyword': { order: 'desc' } }];
+            break;
+        case 'relevance':
+        default:
+            sortConfig = [
+                { _score: { order: 'desc' } },
+                { 'nombre.keyword': { order: 'asc' } }
+            ];
+            break;
+    }
+    
     const searchBody = { 
         query,
-        size: 50,
-        sort: [
-            { _score: { order: 'desc' } },
-            { 'nombre.keyword': { order: 'asc' } }
-        ]
+        size: limit,
+        from: from,
+        sort: sortConfig
     };
     
     return new Promise((resolve, reject) => {

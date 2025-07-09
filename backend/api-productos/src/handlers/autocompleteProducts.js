@@ -17,8 +17,15 @@ exports.lambda_handler = async (event) => {
     }
 
     try {
-        const tenantId = event.headers['X-Tenant-Id'] || event.queryStringParameters?.tenant_id;
-        const query = event.queryStringParameters?.q || '';
+        const tenantId = event.headers['X-Tenant-Id'] || event.headers['x-tenant-id'];
+        
+        let requestBody = {};
+        if (event.body) {
+            requestBody = JSON.parse(event.body);
+        }
+        
+        const query = requestBody.query || '';
+        const limit = requestBody.limit || 5;
         
         if (!tenantId) {
             return {
@@ -44,13 +51,13 @@ exports.lambda_handler = async (event) => {
         
         console.log('Autocomplete ES query:', JSON.stringify(searchQuery, null, 2));
         
-        const results = await searchES(indexName, searchQuery);
+        const results = await searchES(indexName, searchQuery, limit);
         
         // Extraer sugerencias únicas de nombres de productos
         const suggestions = results.hits.hits
             .map(hit => hit._source.nombre)
             .filter((nombre, index, arr) => arr.indexOf(nombre) === index) // Únicos
-            .slice(0, 10); // Máximo 10 sugerencias
+            .slice(0, limit); // Máximo según el límite especificado
         
         return {
             statusCode: 200,
@@ -96,14 +103,14 @@ const buildAutocompleteQuery = (query) => {
     };
 };
 
-const searchES = async (indexName, query) => {
+const searchES = async (indexName, query, limit = 10) => {
     const url = `${ES_URL}/${indexName}/_search`;
     const searchBody = { 
         query,
-        size: 20,
-        _source: ['nombre', 'producto_id'],
+        size: limit,
         sort: [
-            { _score: { order: 'desc' } }
+            { _score: { order: 'desc' } },
+            { 'nombre.keyword': { order: 'asc' } }
         ]
     };
     

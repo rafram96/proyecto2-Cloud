@@ -1,4 +1,4 @@
-import { request } from './request';
+import { requestProducts } from './request';
 
 interface ProductData {
   codigo: string;
@@ -18,7 +18,7 @@ export const productService = {
       formData.append('image', file);
       formData.append('tenant_id', tenantId);
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/productos/upload-image`, {
+      const response = await fetch(`${import.meta.env.VITE_PRODUCTS_API_URL}/productos/upload-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -41,7 +41,7 @@ export const productService = {
 
   async listarProductos(page = 1, limit = 12) {
     try {
-      const data = await request<{ productos: any[]; count: number; pagination: any }>(
+      const data = await requestProducts<{ productos: any[]; count: number; pagination: any }>(
         '/productos/listar',
         {
           method: 'POST',
@@ -56,7 +56,7 @@ export const productService = {
 
   async crearProducto(productData: ProductData) {
     try {
-      const data = await request<any>('/productos/crear', {
+      const data = await requestProducts<any>('/productos/crear', {
         method: 'POST',
         body: JSON.stringify(productData),
       });
@@ -68,7 +68,7 @@ export const productService = {
 
   async buscarProducto(codigo: string) {
     try {
-      const data = await request<any>('/productos/buscar', {
+      const data = await requestProducts<any>('/productos/buscar', {
         method: 'POST',
         body: JSON.stringify({ codigo }),
       });
@@ -87,7 +87,7 @@ export const productService = {
         ...(categoria && { categoria })
       };
 
-      const data = await request<{ productos: any[]; count: number; pagination: any }>(
+      const data = await requestProducts<{ productos: any[]; count: number; pagination: any }>(
         '/productos/listar',
         {
           method: 'POST',
@@ -102,7 +102,7 @@ export const productService = {
 
   async actualizarProducto(codigo: string, updates: any) {
     try {
-      const data = await request<any>('/productos/actualizar', {
+      const data = await requestProducts<any>('/productos/actualizar', {
         method: 'POST',
         body: JSON.stringify({ codigo, ...updates }),
       });
@@ -114,13 +114,49 @@ export const productService = {
 
   async eliminarProducto(codigo: string) {
     try {
-      const data = await request<any>('/productos/eliminar', {
+      const data = await requestProducts<any>('/productos/eliminar', {
         method: 'POST',
         body: JSON.stringify({ codigo }),
       });
       return { success: true, data };
     } catch (error: any) {
       return { success: false, error: error.error || 'Error al eliminar producto' };
+    }
+  },
+
+  // Nuevas funciones para búsqueda con Elasticsearch
+  async searchProducts(searchParams: {
+    query?: string;
+    filters?: {
+      categoria?: string;
+      precio_min?: number;
+      precio_max?: number;
+      tags?: string[];
+    };
+    sort?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    try {
+      const data = await requestProducts<any>('/productos/search', {
+        method: 'POST',
+        body: JSON.stringify(searchParams),
+      });
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.error || 'Error en la búsqueda' };
+    }
+  },
+
+  async autocompleteProducts(query: string, limit = 5) {
+    try {
+      const data = await requestProducts<any>('/productos/autocomplete', {
+        method: 'POST',
+        body: JSON.stringify({ query, limit }),
+      });
+      return { success: true, data };
+    } catch (error: any) {
+      return { success: false, error: error.error || 'Error en autocompletado' };
     }
   },
 };

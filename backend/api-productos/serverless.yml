@@ -228,7 +228,7 @@ functions:
     events:
       - http:
           path: /productos/search
-          method: get
+          method: post
           cors:
             origin: '*'
             headers:
@@ -259,7 +259,7 @@ functions:
     events:
       - http:
           path: /productos/autocomplete
-          method: get
+          method: post
           cors:
             origin: '*'
             headers:
