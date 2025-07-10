@@ -50,7 +50,7 @@ const baseHandler = async (event, context) => {
         // Verificar que el producto existe y pertenece al tenant usando las claves correctas
         const key = {
             tenant_id: userContext.tenant_id,
-            SK: `producto#${codigo}`
+            SK: `PRODUCTO#${codigo}`
         };
 
         const existingProduct = await getItem(table, key);

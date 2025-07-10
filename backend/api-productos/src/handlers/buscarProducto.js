@@ -55,7 +55,7 @@ const baseHandler = async (event, context) => {
         // Buscar producto por código y tenant_id usando las claves correctas de DynamoDB
         const key = {
             tenant_id: tenant_id,
-            SK: `producto#${codigo}`
+            SK: `PRODUCTO#${codigo}`
         };
 
         const result = await getItem(table, key);

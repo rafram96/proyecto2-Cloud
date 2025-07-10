@@ -2,10 +2,7 @@ const crypto = require('crypto');
 const { createResponse, requireAuth } = require('../utils/auth');
 const { getTable, createItem } = require('../utils/dynamodb');
 
-/**
- * @typedef {import('../utils/types').Product} Product
- * @typedef {import('../utils/types').ApiResponse<Product>} ApiResponse
- */
+
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -78,10 +75,6 @@ const baseHandler = async (event, context) => {
             // Obtener tenant_id del contexto del usuario
             const tenant_id = userContext.tenant_id;
             
-            // Crear claves primarias según nueva estructura
-            const pk = tenant_id;                    // PK = tenant_id
-            const sk = `producto#${codigo}`;         // SK = producto#<codigo>
-
             // Conectar DynamoDB
             const table = getTable(process.env.PRODUCTOS_TABLE);
 
@@ -89,9 +82,8 @@ const baseHandler = async (event, context) => {
 
             // Crear objeto producto con nueva estructura multi-tenant
             const producto = {
-                PK: pk,
-                SK: sk,
-                tenant_id: tenant_id,
+                tenant_id: tenant_id,                // PK (partition key)
+                SK: `PRODUCTO#${codigo}`,            // SK (sort key) - consistente en mayúsculas
                 codigo: codigo,
                 nombre: nombre,
                 descripcion: descripcion,

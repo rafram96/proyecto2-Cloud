@@ -27,9 +27,18 @@ provider:
     STAGE: ${self:provider.stage}
     IMAGES_BUCKET: imagenes-productos-${self:provider.stage}
 
+layers:
+  dependencies:
+    path: layers/dependencies
+    description: Dependencies layer
+    compatibleRuntimes:
+      - nodejs18.x
+
 functions:
   crear:
     handler: src/handlers/crearProducto.lambda_handler
+    layers:
+      - { Ref: DependenciesLambdaLayer }
     events:
       - http:
           path: /productos/crear
@@ -48,6 +57,8 @@ functions:
           
   listar:
     handler: src/handlers/listarProductos.lambda_handler
+    layers:
+      - { Ref: DependenciesLambdaLayer }
     events:
       - http:
           path: /productos/listar
@@ -66,6 +77,8 @@ functions:
 
   buscar:
     handler: src/handlers/buscarProducto.lambda_handler
+    layers:
+      - { Ref: DependenciesLambdaLayer }
     events:
       - http:
           path: /productos/buscar
@@ -85,6 +98,8 @@ functions:
           
   actualizar:
     handler: src/handlers/actualizarProducto.lambda_handler
+    layers:
+      - { Ref: DependenciesLambdaLayer }
     events:
       - http:
           path: /productos/actualizar
@@ -104,6 +119,8 @@ functions:
           
   eliminar:
     handler: src/handlers/eliminarProducto.lambda_handler
+    layers:
+      - { Ref: DependenciesLambdaLayer }
     events:
       - http:
           path: /productos/eliminar
@@ -123,6 +140,8 @@ functions:
           
   upload-image:
     handler: src/handlers/uploadImage.lambda_handler
+    layers:
+      - { Ref: DependenciesLambdaLayer }
     events:
       - http:
           path: /productos/upload-image

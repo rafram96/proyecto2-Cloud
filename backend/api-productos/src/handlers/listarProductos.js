@@ -56,15 +56,17 @@ const baseHandler = async (event, context) => {
                     error: 'El límite máximo es 100 productos por página'
                 })
             };
-        }         // Conectar DynamoDB
+        }
+
+         // Conectar DynamoDB
          const table = getTable(process.env.PRODUCTOS_TABLE);
 
-         // Usar Query con nueva estructura: PK = tenant_id, SK = producto#<codigo>
+         // Usar Query con nueva estructura: tenant_id como PK, SK = PRODUCTO#<codigo>
          const queryParams = {
-             KeyConditionExpression: 'PK = :tenant_id AND begins_with(SK, :prefix)',
+             KeyConditionExpression: 'tenant_id = :tenant_id AND begins_with(SK, :prefix)',
              ExpressionAttributeValues: {
                  ':tenant_id': userContext.tenant_id,
-                 ':prefix': 'producto#',
+                 ':prefix': 'PRODUCTO#',
                  ':activo': true
              },
              FilterExpression: 'activo = :activo',
