@@ -1,6 +1,5 @@
 node_modules
-api-compras
 scripts
 docs
-docs/informe.texs
+docs/informe.tex
 .env

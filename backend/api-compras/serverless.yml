@@ -1,0 +1,106 @@
+org: rafaelram
+service: api-compras
+
+provider:
+  name: aws
+  runtime: python3.13
+  timeout: 30
+  iam:
+    role: arn:aws:iam::498917627164:role/LabRole
+    environment:
+    COMPRAS_TABLE: p_compras
+    PRODUCTOS_TABLE: p_productos
+    STAGE: dev
+
+functions:
+  crear:
+    handler: src/handlers/crear_compra.lambda_handler
+    events:
+      - http:
+          path: /compras/crear
+          method: post
+          cors: true
+          integration: lambda
+  listar:
+    handler: src/handlers/listar_compras.lambda_handler
+    events:
+      - http:
+          path: /compras/listar
+          method: post
+          cors: true
+          integration: lambda
+          path: compras/{usuario_id}
+          method: get
+          cors: true
+    environment:
+      COMPRAS_TABLE: ${self:custom.tableName}
+
+
+
+
+resources:
+  Resources:
+    ComprasTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: compra_id
+            AttributeType: S
+          - AttributeName: usuario_id
+            AttributeType: S
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: created_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: compra_id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UsuarioTenantIndex
+            KeySchema:
+              - AttributeName: usuario_id
+                KeyType: HASH
+              - AttributeName: tenant_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            BillingMode: PAY_PER_REQUEST
+          - IndexName: TenantFechaIndex
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            BillingMode: PAY_PER_REQUEST
+        BillingMode: PAY_PER_REQUEST
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
+        Tags:
+          - Key: Environment
+            Value: ${self:custom.stage}
+          - Key: Service
+            Value: api-compras
+
+  Outputs:
+    ApiGatewayRestApiId:
+      Value: !Ref ApiGatewayRestApi
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ApiId
+    ComprasTableName:
+      Value: !Ref ComprasTable
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ComprasTable
+    ComprasTableArn:
+      Value: !GetAtt ComprasTable.Arn
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ComprasTableArn
+    ComprasTableStreamArn:
+      Value: !GetAtt ComprasTable.StreamArn
+      Export:
+        Name: ${self:service}-${self:custom.stage}-ComprasTableStreamArn
+
+plugins:
+  - serverless-python-requirements
