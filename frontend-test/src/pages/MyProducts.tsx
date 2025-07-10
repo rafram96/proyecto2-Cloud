@@ -600,10 +600,43 @@ const MyProducts: React.FC = () => {
         {/* Barra de búsqueda de productos */}
         <SearchBar
           placeholder="Buscar productos..."
-          onSearch={q => productService.searchProducts({ query: q, page:1, limit:12 })
-            .then(r => r.success && setProducts(r.data.productos))}
-          onAutocomplete={q => productService.autocompleteProducts(q,5)
-            .then(r => r.success && setSuggestions(r.data.suggestions || []))}
+          onSearch={async (q) => {
+            try {
+              if (!q.trim()) {
+                // Si búsqueda vacía, cargar todos los productos
+                await loadProducts();
+                return;
+              }
+              
+              const result = await productService.searchProducts({ query: q, page: 1, limit: 12 });
+              if (result.success && result.data?.productos) {
+                setProducts(result.data.productos);
+              } else {
+                console.warn('No se encontraron productos');
+                setProducts([]);
+              }
+            } catch (error) {
+              console.error('Error en búsqueda:', error);
+            }
+          }}
+          onAutocomplete={async (q) => {
+            try {
+              if (!q.trim()) {
+                setSuggestions([]);
+                return;
+              }
+              
+              const result = await productService.autocompleteProducts(q, 5);
+              if (result.success && result.data?.suggestions) {
+                setSuggestions(result.data.suggestions);
+              } else {
+                setSuggestions([]);
+              }
+            } catch (error) {
+              console.error('Error en autocomplete:', error);
+              setSuggestions([]);
+            }
+          }}
           suggestions={suggestions}
         />
 
@@ -611,14 +644,14 @@ const MyProducts: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl theme-transition">
           <div className="p-6">
             <h2 className="text-2xl font-koulen font-bold text-gray-900 dark:text-gray-100 mb-6">
-              PRODUCTOS REGISTRADOS ({products.length})
+              PRODUCTOS REGISTRADOS ({products?.length || 0})
             </h2>
             
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400"></div>
               </div>
-            ) : products.length === 0 ? (
+            ) : products?.length === 0 ? (
               <div className="text-center py-12">
                 <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4.01L4 7m16 0v10l-8 4-8-4V7" />
@@ -645,7 +678,7 @@ const MyProducts: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product) => (
+                    {(products || []).map((product) => (
                       <tr key={product.codigo} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <td className="py-4 px-4">
                           <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-lg overflow-hidden">

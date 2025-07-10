@@ -21,7 +21,9 @@ exports.lambda_handler = async (event) => {
         
         let requestBody = {};
         if (event.body) {
-            requestBody = JSON.parse(event.body);
+            requestBody = typeof event.body === 'string'
+                ? JSON.parse(event.body)
+                : event.body;
         }
         
         const query = requestBody.query || '';
@@ -38,7 +40,7 @@ exports.lambda_handler = async (event) => {
             };
         }
 
-        const indexName = `products-${tenantId}`;
+        const indexName = `productos_${tenantId.toLowerCase()}`;
         const searchQuery = buildSearchQuery(query, filters, sort, page, limit);
         
         console.log('Searching ES with query:', JSON.stringify(searchQuery, null, 2));

@@ -29,7 +29,7 @@ const syncToElasticsearch = async (record) => {
     }
     
     const productoId = sortKey.replace('PRODUCTO#', '');
-    const indexName = `products-${tenantId}`;
+    const indexName = `productos_${tenantId.toLowerCase()}`;
     
     try {
         if (eventName === 'REMOVE') {

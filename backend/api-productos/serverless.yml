@@ -187,7 +187,6 @@ functions:
             allowCredentials: false
           integration: lambda
 
-
   autocompleteProducts:
     handler: src/handlers/autocompleteProducts.lambda_handler
     events:

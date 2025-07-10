@@ -48,7 +48,7 @@ exports.lambda_handler = async (event) => {
             };
         }
 
-        const indexName = `products-${tenantId}`;
+        const indexName = `productos_${tenantId.toLowerCase()}`;
         const searchQuery = buildAutocompleteQuery(query);
         
         console.log('Autocomplete ES query:', JSON.stringify(searchQuery, null, 2));
