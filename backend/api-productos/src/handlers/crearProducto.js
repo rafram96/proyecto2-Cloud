@@ -1,4 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { createResponse, requireAuth } = require('../utils/auth');
 const { getTable, createItem } = require('../utils/dynamodb');
 
@@ -73,7 +73,7 @@ const baseHandler = async (event, context) => {
             }
 
             // Generar código único del producto
-            const codigo = uuidv4();
+            const codigo = crypto.randomUUID();
             
             // Obtener tenant_id del contexto del usuario
             const tenant_id = userContext.tenant_id;

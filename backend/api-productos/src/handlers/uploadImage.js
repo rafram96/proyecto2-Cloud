@@ -1,5 +1,5 @@
 const AWS = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const { createResponse, requireAuth } = require('../utils/auth');
 
 const s3 = new AWS.S3();
@@ -69,7 +69,7 @@ const baseHandler = async (event, context) => {
 
         // Generate unique filename
         const fileExtension = finalContentType.split('/')[1] || 'jpg';
-        const fileName = `${tenantId}/${uuidv4()}.${fileExtension}`;
+        const fileName = `${tenantId}/${crypto.randomUUID()}.${fileExtension}`;
         const bucketName = process.env.IMAGES_BUCKET;
 
         // Upload to S3
