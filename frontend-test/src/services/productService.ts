@@ -24,27 +24,86 @@ export const productService = {
       const mimeType = file.type || 'image/jpeg';
       const payload = { base64, mimeType }; // tenantId se obtiene desde requestProducts
 
-      const data = await requestProducts<any>('/productos/upload-image', {
+      const response = await requestProducts<any>('/productos/upload-image', {
         method: 'POST',
         body: JSON.stringify(payload),
       });
 
-      return { success: true, data: data.data };
+      console.log('📸 Upload response:', response);
+      console.log('📸 Upload response type:', typeof response);
+      console.log('📸 Upload response keys:', Object.keys(response || {}));
+
+      // Si la respuesta viene en formato Lambda (statusCode + body)
+      if (response.statusCode === 200 && response.body) {
+        const parsedData = typeof response.body === 'string' 
+          ? JSON.parse(response.body) 
+          : response.body;
+        
+        console.log('📸 Parsed data:', parsedData);
+        
+        if (parsedData.success && parsedData.data) {
+          console.log('✅ Imagen subida exitosamente:', parsedData.data);
+          return { success: true, data: parsedData.data };
+        } else {
+          console.log('❌ Error en upload:', parsedData);
+          return { success: false, error: parsedData.error || 'Error al subir imagen' };
+        }
+      }
+
+      // Si la respuesta ya viene parseada directamente
+      if (response && response.success && response.data) {
+        console.log('✅ Imagen subida exitosamente (directo):', response.data);
+        return { success: true, data: response.data };
+      }
+
+      // Si hay error en la respuesta
+      if (response && !response.success) {
+        console.log('❌ Error en respuesta:', response.error);
+        return { success: false, error: response.error || 'Error al subir imagen' };
+      }
+
+      console.log('🤷 Respuesta no reconocida:', response);
+      return { success: false, error: 'Respuesta no válida del servidor' };
     } catch (error: any) {
-      return { success: false, error: error.message || 'Error al subir imagen' };
+      console.error('💥 Error en uploadImage:', error);
+      console.error('💥 Error details:', {
+        message: error.message,
+        stack: error.stack,
+        error: error.error,
+        statusCode: error.statusCode
+      });
+      return { 
+        success: false, 
+        error: error.error || error.message || 'Error al subir imagen' 
+      };
     }
   },
 
   async listarProductos(page = 1, limit = 12) {
     try {
-      const data = await requestProducts<{ productos: any[]; count: number; pagination: any }>(
+      const response = await requestProducts<any>(
         '/productos/listar',
         {
           method: 'POST',
           body: JSON.stringify({ page, limit }),
         }
       );
-      return { success: true, data };
+      
+      // Si la respuesta viene en formato Lambda (statusCode + body)
+      if (response.statusCode === 200 && response.body) {
+        const parsedData = typeof response.body === 'string' 
+          ? JSON.parse(response.body) 
+          : response.body;
+        
+        if (parsedData.success && parsedData.data) {
+          return { success: true, data: parsedData.data };
+        } else {
+          return { success: false, error: parsedData.error || 'Error al listar productos' };
+        }
+      }
+      
+      // Si la respuesta ya viene parseada
+      return { success: true, data: response };
     } catch (error: any) {
       return { success: false, error: error.error || 'Error al listar productos' };
     }

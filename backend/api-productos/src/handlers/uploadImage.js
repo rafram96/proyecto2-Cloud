@@ -32,15 +32,38 @@ const baseHandler = async (event, context) => {
         let imageBuffer;
         let finalContentType;
 
+        // Manejo robusto de body JSON vs objeto
         if (contentTypeHeader && contentTypeHeader.includes('application/json')) {
-            // Parse base64 JSON
-            const { base64, mimeType } = JSON.parse(event.body);
+            let body;
+            if (typeof event.body === 'string') {
+                try {
+                    body = JSON.parse(event.body);
+                } catch (err) {
+                    console.error('❌ JSON.parse error:', err);
+                    return {
+                        statusCode: 400,
+                        headers: corsHeaders,
+                        body: JSON.stringify({ success: false, error: 'JSON inválido' }),
+                    };
+                }
+            } else {
+                body = event.body;
+            }
+            const { base64, mimeType } = body;
+            if (!base64 || !mimeType) {
+                console.error('❌ Falta base64 o mimeType:', body);
+                return {
+                    statusCode: 400,
+                    headers: corsHeaders,
+                    body: JSON.stringify({ success: false, error: 'base64 y mimeType requeridos' }),
+                };
+            }
             imageBuffer = Buffer.from(base64, 'base64');
             finalContentType = mimeType;
         } else {
             // Parse multipart form data (legacy)
             const body = event.body;
-            const boundary = contentTypeHeader.split('boundary=')[1];
+            const boundary = contentTypeHeader && contentTypeHeader.split('boundary=')[1];
             const parts = body.split(`--${boundary}`);
             imageBuffer = null;
             finalContentType = 'image/jpeg';

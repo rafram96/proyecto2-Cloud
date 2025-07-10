@@ -86,15 +86,25 @@ const MyProducts: React.FC = () => {
     if (!user?.tenantId) return;
     
     try {
+      console.log('🔍 Iniciando carga de productos...');
       setLoading(true);
+      
       const result = await productService.listarProductos();
-      if (result.success && result.data) {
-        setProducts(result.data.productos || []);
+      console.log('📦 Respuesta recibida:', result);
+      
+      if (result.success && result.data?.productos) {
+        console.log(`✅ ${result.data.productos.length} productos cargados`);
+        setProducts(result.data.productos);
+      } else {
+        console.log('❌ No se encontraron productos o error en respuesta:', result);
+        setProducts([]);
       }
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('💥 Error cargando productos:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
+      console.log('🏁 Carga de productos finalizada');
     }
   };
 
@@ -169,9 +179,14 @@ const MyProducts: React.FC = () => {
       
       // Subir imagen si hay una nueva
       if (imageFile) {
+        console.log('🖼️ Subiendo imagen...');
         const uploadResult = await productService.uploadImage(imageFile, user.tenantId);
-        if (uploadResult.success && uploadResult.data?.url) {
-          imageUrl = uploadResult.data.url;
+        console.log('📤 Resultado del upload:', uploadResult);
+        if (uploadResult.success && uploadResult.data?.imagen_url) {
+          imageUrl = uploadResult.data.imagen_url;
+          console.log('✅ URL de imagen asignada:', imageUrl);
+        } else {
+          console.error('❌ Error en upload:', uploadResult.error);
         }
       }
 
@@ -196,9 +211,18 @@ const MyProducts: React.FC = () => {
       }
 
       if (result.success) {
-        await loadProducts();
-        resetForm();
+        // 1. Mostrar mensaje de éxito
         alert(editingProduct ? 'Producto actualizado exitosamente' : 'Producto creado exitosamente');
+        
+        // 2. Limpiar formulario
+        resetForm();
+        
+        // 3. FORZAR recarga inmediata de productos
+        console.log('🔄 Recargando lista de productos después de crear/actualizar...');
+        setLoading(true);
+        await loadProducts();
+        setLoading(false);
+        console.log('✅ Lista de productos actualizada');
       } else {
         alert('Error: ' + (result.error || 'No se pudo procesar el producto'));
       }

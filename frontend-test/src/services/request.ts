@@ -54,8 +54,13 @@ export async function requestProducts<T>(
     headers,
   });
   
+  console.log(`📡 Request to ${PRODUCTS_BASE_URL}${path} - Status: ${response.status}`);
+  
   const payload = await response.json().catch(() => ({}));
+  console.log(`📦 Response payload:`, payload);
+  
   if (!response.ok) {
+    console.error(`❌ Request failed: ${response.status} - ${response.statusText}`);
     throw payload;
   }
   return payload;
