@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { productService } from '../services/productService';
 import type { Product } from '../types/product';
+import SearchBar from '../components/SearchBar';
 
 const MyProducts: React.FC = () => {
   const { user } = useAuth();
@@ -13,7 +14,11 @@ const MyProducts: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [codeGenerated, setCodeGenerated] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false); // Nuevo estado para drag over
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  // Estados para búsqueda y autocompletado
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -591,6 +596,16 @@ const MyProducts: React.FC = () => {
             </form>
           </div>
         )}
+
+        {/* Barra de búsqueda de productos */}
+        <SearchBar
+          placeholder="Buscar productos..."
+          onSearch={q => productService.searchProducts({ query: q, page:1, limit:12 })
+            .then(r => r.success && setProducts(r.data.productos))}
+          onAutocomplete={q => productService.autocompleteProducts(q,5)
+            .then(r => r.success && setSuggestions(r.data.suggestions || []))}
+          suggestions={suggestions}
+        />
 
         {/* Lista de productos */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl theme-transition">

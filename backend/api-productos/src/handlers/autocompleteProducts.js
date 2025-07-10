@@ -21,7 +21,9 @@ exports.lambda_handler = async (event) => {
         
         let requestBody = {};
         if (event.body) {
-            requestBody = JSON.parse(event.body);
+            requestBody = typeof event.body === 'string'
+                ? JSON.parse(event.body)
+                : event.body;
         }
         
         const query = requestBody.query || '';
