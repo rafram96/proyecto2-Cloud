@@ -4,163 +4,149 @@ import uuid
 import boto3
 from datetime import datetime
 from botocore.exceptions import ClientError
+from decimal import Decimal
 
-# Función que crea una nueva compra
+# Importar utilidades
+import sys
+sys.path.append('/opt/python')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+
+from auth import require_auth, create_response, get_tenant_id, get_user_id
+from dynamodb import get_compras_table
+
 def lambda_handler(event, context):
-    try:
-        print(event)
-        
-        # Validar token JWT invocando Lambda ValidarTokenAcceso
-        token = event['headers']['Authorization']
-        lambda_client = boto3.client('lambda')
-        payload_string = json.dumps({'token': token})
-        invoke_response = lambda_client.invoke(
-            FunctionName='ValidarTokenAcceso',
-            InvocationType='RequestResponse',
-            Payload=payload_string
-        )
-        response = json.loads(invoke_response['Payload'].read())
-        if response['statusCode'] == 403:
-            return {
-                'statusCode': 403,
-                'status': 'Forbidden - Acceso No Autorizado'
-            }
-        user_context = response['body']['user']
-        
-        # Manejar el caso en que body sea string o diccionario
-        if isinstance(event['body'], str):
-            body = json.loads(event['body'])
-        else:
-            body = event['body']
-        
-        # Obtener datos de la compra
-        productos = body.get('productos')  # Lista de productos con codigo y cantidad
-        direccion_entrega = body.get('direccion_entrega')
-        metodo_pago = body.get('metodo_pago')
-        
-        # Obtener tenant_id del contexto del usuario
-        tenant_id = user_context['tenant_id']
-        usuario_id = user_context['usuario_id']
-        
-        # Verificar que los campos requeridos existen
-        if productos and direccion_entrega and metodo_pago:
-            # Validar que productos es una lista no vacía
+    @require_auth
+    def _handler(event, context):
+        try:
+            # Obtener contexto del usuario desde JWT
+            tenant_id = get_tenant_id(event)
+            user_id = get_user_id(event)
+            
+            if not tenant_id or not user_id:
+                return create_response(400, {
+                    'success': False, 
+                    'error': 'Información de usuario inválida'
+                })
+
+            # Parse del body de la request
+            if isinstance(event.get('body'), str):
+                body = json.loads(event['body'])
+            else:
+                body = event.get('body', {})
+
+            # Validar campos requeridos
+            productos = body.get('productos', [])
+            direccion_entrega = body.get('direccion_entrega')
+            metodo_pago = body.get('metodo_pago')
+
+            if not productos or not direccion_entrega or not metodo_pago:
+                return create_response(400, {
+                    'success': False,
+                    'error': 'Campos requeridos: productos, direccion_entrega, metodo_pago'
+                })
+
             if not isinstance(productos, list) or len(productos) == 0:
-                mensaje = {
+                return create_response(400, {
+                    'success': False,
                     'error': 'Debe incluir al menos un producto en la compra'
-                }
-                return {
-                    'statusCode': 400,
-                    'body': mensaje
-                }
-            
-            # Conectar DynamoDB
+                })
+
+            # Conectar a DynamoDB
             dynamodb = boto3.resource('dynamodb')
-            t_compras = dynamodb.Table(os.environ['COMPRAS_TABLE'])
-            t_productos = dynamodb.Table(os.environ['PRODUCTOS_TABLE'])
-            
-            # Validar existencia de productos y calcular total
-            total_compra = 0
+            compras_table = get_compras_table()
+            productos_table = dynamodb.Table(os.environ.get('PRODUCTOS_TABLE', 'productos-dev'))
+
+            # Validar productos y calcular total
+            total_compra = Decimal('0')
             productos_validados = []
-            
+
             for item in productos:
                 codigo_producto = item.get('codigo')
                 cantidad = item.get('cantidad', 1)
-                
+
                 if not codigo_producto or cantidad <= 0:
-                    mensaje = {
+                    return create_response(400, {
+                        'success': False,
                         'error': 'Código de producto y cantidad válida requeridos'
-                    }
-                    return {
-                        'statusCode': 400,
-                        'body': mensaje
-                    }
-                  # Buscar producto usando nueva estructura: PK = tenant_id, SK = producto#<codigo>
+                    })
+
+                # Buscar producto en la tabla de productos
                 try:
-                    producto_response = t_productos.get_item(
+                    producto_response = productos_table.get_item(
                         Key={
-                            'PK': tenant_id,
-                            'SK': f'producto#{codigo_producto}'
+                            'tenant_id': tenant_id,
+                            'SK': f'PRODUCTO#{codigo_producto}'
                         }
                     )
-                    
+
                     if 'Item' not in producto_response:
-                        mensaje = {
+                        return create_response(404, {
+                            'success': False,
                             'error': f'Producto {codigo_producto} no encontrado'
-                        }
-                        return {
-                            'statusCode': 404,
-                            'body': mensaje
-                        }
-                    
+                        })
+
                     producto = producto_response['Item']
-                    
+
                     # Verificar stock disponible
-                    if producto['stock'] < cantidad:
-                        mensaje = {
-                            'error': f'Stock insuficiente para producto {codigo_producto}'
-                        }
-                        return {
-                            'statusCode': 400,
-                            'body': mensaje
-                        }
-                    
+                    stock_disponible = int(producto.get('stock', 0))
+                    if stock_disponible < cantidad:
+                        return create_response(400, {
+                            'success': False,
+                            'error': f'Stock insuficiente para producto {codigo_producto}. Disponible: {stock_disponible}'
+                        })
+
                     # Calcular subtotal
-                    subtotal = producto['precio'] * cantidad
+                    precio_unitario = Decimal(str(producto['precio']))
+                    subtotal = precio_unitario * Decimal(str(cantidad))
                     total_compra += subtotal
-                    
+
                     productos_validados.append({
                         'codigo': codigo_producto,
                         'nombre': producto['nombre'],
-                        'precio_unitario': producto['precio'],
+                        'precio_unitario': float(precio_unitario),
                         'cantidad': cantidad,
-                        'subtotal': subtotal
+                        'subtotal': float(subtotal)
                     })
-                    
+
                 except ClientError as e:
                     print(f"Error al buscar producto {codigo_producto}: {e}")
-                    mensaje = {
+                    return create_response(500, {
+                        'success': False,
                         'error': 'Error al validar productos'
-                    }
-                    return {
-                        'statusCode': 500,
-                        'body': mensaje
-                    }
+                    })
+
+            # Crear la compra
             compra_id = str(uuid.uuid4())
-            timestamp = datetime.now().isoformat()
-            
-            # Crear claves primarias según nueva estructura
-            pk = f"{tenant_id}#{usuario_id}"  # PK = tenant_id#usuario_id
-            sk = f"compra#{compra_id}"        # SK = compra#<compra_id>
-            
-            # Crear objeto compra
-            compra = {
-                'PK': pk,                     # tenant_id#usuario_id
-                'SK': sk,                     # compra#<compra_id>
-                'compra_id': compra_id,
-                'usuario_id': usuario_id,
+            timestamp = datetime.utcnow().isoformat()
+
+            compra_item = {
                 'tenant_id': tenant_id,
+                'SK': f'COMPRA#{compra_id}',
+                'compra_id': compra_id,
+                'user_id': user_id,
+                'fecha_compra': timestamp,
                 'productos': productos_validados,
-                'total': total_compra,
+                'total': float(total_compra),
                 'direccion_entrega': direccion_entrega,
                 'metodo_pago': metodo_pago,
-                'estado': 'confirmada',
+                'estado': 'COMPLETADA',
                 'created_at': timestamp,
                 'updated_at': timestamp
             }
-            
-            # Almacenar compra en DynamoDB
-            t_compras.put_item(Item=compra)
-            
+
+            # Guardar compra en DynamoDB
+            compras_table.put_item(Item=compra_item)
+
             # Actualizar stock de productos
             for item in productos:
                 codigo_producto = item.get('codigo')
                 cantidad = item.get('cantidad', 1)
+                
                 try:
-                    t_productos.update_item(
+                    productos_table.update_item(
                         Key={
-                            'PK': tenant_id,
-                            'SK': f'producto#{codigo_producto}'
+                            'tenant_id': tenant_id,
+                            'SK': f'PRODUCTO#{codigo_producto}'
                         },
                         UpdateExpression='SET stock = stock - :cantidad, updated_at = :timestamp',
                         ExpressionAttributeValues={
@@ -170,45 +156,30 @@ def lambda_handler(event, context):
                     )
                 except ClientError as e:
                     print(f"Error al actualizar stock del producto {codigo_producto}: {e}")
-                    # En un escenario real, aquí implementarías rollback
-            
-            # Retornar un código de estado HTTP 201 (Created) y un mensaje de éxito
-            mensaje = {
-                'message': 'Compra creada exitosamente',
-                'compra_id': compra_id,
-                'total': total_compra,
-                'productos': productos_validados,
-                'estado': 'confirmada',
-                'created_at': timestamp
-            }
-            return {
-                'statusCode': 201,
-                'body': mensaje
-            }
-        else:
-            mensaje = {
-                'error': 'Campos requeridos: productos, direccion_entrega, metodo_pago'
-            }
-            return {
-                'statusCode': 400,
-                'body': mensaje
-            }
+                    # En un escenario real, implementarías rollback aquí
 
-    except json.JSONDecodeError:
-        mensaje = {
-            'error': 'JSON inválido'
-        }
-        return {
-            'statusCode': 400,
-            'body': mensaje
-        }
-    except Exception as e:
-        # Excepción y retornar un código de error HTTP 500
-        print("Exception:", str(e))
-        mensaje = {
-            'error': str(e)
-        }        
-        return {
-            'statusCode': 500,
-            'body': mensaje
-        }
+            return create_response(201, {
+                'success': True,
+                'message': 'Compra creada exitosamente',
+                'data': {
+                    'compra_id': compra_id,
+                    'total': float(total_compra),
+                    'productos': productos_validados,
+                    'estado': 'COMPLETADA',
+                    'created_at': timestamp
+                }
+            })
+
+        except json.JSONDecodeError:
+            return create_response(400, {
+                'success': False,
+                'error': 'JSON inválido'
+            })
+        except Exception as e:
+            print(f"Error interno: {e}")
+            return create_response(500, {
+                'success': False,
+                'error': 'Error interno del servidor'
+            })
+
+    return _handler(event, context)

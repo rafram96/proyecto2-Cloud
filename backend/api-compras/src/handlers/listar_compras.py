@@ -1,148 +1,118 @@
 import json
 import os
 import boto3
+from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-# Función que lista las compras de un usuario
+# Importar utilidades
+import sys
+sys.path.append('/opt/python')
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
+
+from auth import require_auth, create_response, get_tenant_id, get_user_id
+from dynamodb import listar_compras_usuario
+
 def lambda_handler(event, context):
-    try:
-        print(event)
-        
-        # Validar token JWT invocando Lambda ValidarTokenAcceso
-        token = event['headers']['Authorization']
-        lambda_client = boto3.client('lambda')
-        payload_string = json.dumps({'token': token})
-        invoke_response = lambda_client.invoke(
-            FunctionName='ValidarTokenAcceso',
-            InvocationType='RequestResponse',
-            Payload=payload_string
-        )
-        response = json.loads(invoke_response['Payload'].read())
-        if response['statusCode'] == 403:
-            return {
-                'statusCode': 403,
-                'status': 'Forbidden - Acceso No Autorizado'
-            }
-          # Obtener información del usuario desde la validación del token
-        user_context = response['body']['user']
-        tenant_id = user_context['tenant_id']
-        usuario_id = user_context['usuario_id']
-        
-        # Obtener usuario_id del path parameter o usar el del token
-        requested_usuario_id = event.get('pathParameters', {}).get('usuario_id') or usuario_id
-        
-        # Verificar que el usuario solo pueda ver sus propias compras (seguridad)
-        if requested_usuario_id != usuario_id:
-            mensaje = {
-                'error': 'No autorizado para ver compras de otro usuario'
-            }
-            return {
-                'statusCode': 403,
-                'body': mensaje
-            }
-        
-        # Conectar DynamoDB
-        dynamodb = boto3.resource('dynamodb')
-        t_compras = dynamodb.Table(os.environ['COMPRAS_TABLE'])
-        
-        # Obtener parámetros de query para paginación
-        query_params = event.get('queryStringParameters') or {}
-        limit = int(query_params.get('limit', 10))
-        last_key = query_params.get('lastKey')
-        
-        # Validar límite de paginación
-        if limit > 50:
-            limit = 50  # Máximo 50 compras por consulta
-          # Preparar query usando nueva estructura: PK = tenant_id#usuario_id, SK = compra#<compra_id>
-        pk = f"{tenant_id}#{usuario_id}"  # PK = tenant_id#usuario_id
-        
-        query_params_db = {
-            'KeyConditionExpression': 'PK = :pk AND begins_with(SK, :compra_prefix)',
-            'ExpressionAttributeValues': {
-                ':pk': pk,
-                ':compra_prefix': 'compra#'
-            },
-            'Limit': limit,
-            'ScanIndexForward': False  # Ordenar por fecha descendente (más recientes primero)
-        }
-        
-        # Agregar paginación si existe
-        if last_key:
-            try:
-                decoded_key = json.loads(last_key)
-                query_params_db['ExclusiveStartKey'] = decoded_key
-            except:
-                pass  # Ignorar si no se puede decodificar
-        
+    @require_auth
+    def _handler(event, context):
         try:
-            # Ejecutar query
-            response = t_compras.query(**query_params_db)
+            # Obtener contexto del usuario desde JWT
+            tenant_id = get_tenant_id(event)
+            user_id = get_user_id(event)
             
-            compras = response.get('Items', [])
-            
-            # Formatear compras para respuesta
-            compras_formateadas = []
-            for compra in compras:
-                compras_formateadas.append({
-                    'compra_id': compra['compra_id'],
-                    'productos': compra['productos'],
-                    'total': compra['total'],
-                    'direccion_entrega': compra['direccion_entrega'],
-                    'metodo_pago': compra['metodo_pago'],
-                    'estado': compra['estado'],
-                    'created_at': compra['created_at']
+            if not tenant_id or not user_id:
+                return create_response(400, {
+                    'success': False, 
+                    'error': 'Información de usuario inválida'
                 })
-            
-            # Preparar respuesta con información de paginación
-            respuesta = {
-                'compras': compras_formateadas,
-                'count': len(compras_formateadas),
-                'usuario_id': usuario_id
+
+            # Obtener parámetros de consulta
+            query_params = event.get('queryStringParameters') or {}
+            limit = min(int(query_params.get('limit', 20)), 50)  # Máximo 50
+            last_key = query_params.get('lastKey')
+
+            # Conectar a DynamoDB
+            dynamodb = boto3.resource('dynamodb')
+            compras_table = dynamodb.Table(os.environ.get('COMPRAS_TABLE', 'compras-dev'))
+
+            # Preparar query parameters
+            query_params_db = {
+                'IndexName': 'UserComprasIndex',
+                'KeyConditionExpression': Key('tenant_id').eq(tenant_id) & Key('user_id').eq(user_id),
+                'ScanIndexForward': False,  # Ordenar por fecha descendente
+                'Limit': limit
             }
-            
-            # Agregar información de paginación si hay más elementos
-            if 'LastEvaluatedKey' in response:
-                respuesta['pagination'] = {
-                    'hasMore': True,
-                    'nextKey': json.dumps(response['LastEvaluatedKey'])
-                }
-            else:
-                respuesta['pagination'] = {
-                    'hasMore': False
-                }
-            
-            return {
-                'statusCode': 200,
-                'body': respuesta
-            }
-            
-        except ClientError as e:
-            error_code = e.response['Error']['Code']
-            if error_code == 'ResourceNotFoundException':
-                mensaje = {
-                    'error': 'La tabla de compras no existe'
-                }
-                return {
-                    'statusCode': 404,
-                    'body': mensaje
-                }
-            else:
-                print(f"Error DynamoDB: {e}")
-                mensaje = {
-                    'error': 'Error al buscar compras'
-                }
-                return {
-                    'statusCode': 500,
-                    'body': mensaje
+
+            # Agregar paginación si existe
+            if last_key:
+                try:
+                    decoded_key = json.loads(last_key)
+                    query_params_db['ExclusiveStartKey'] = decoded_key
+                except json.JSONDecodeError:
+                    pass  # Ignorar si no se puede decodificar
+
+            # Ejecutar consulta
+            try:
+                response = compras_table.query(**query_params_db)
+                compras = response.get('Items', [])
+
+                # Formatear compras para respuesta
+                compras_formateadas = []
+                for compra in compras:
+                    compras_formateadas.append({
+                        'compra_id': compra.get('compra_id'),
+                        'productos': compra.get('productos', []),
+                        'total': float(compra.get('total', 0)),
+                        'direccion_entrega': compra.get('direccion_entrega'),
+                        'metodo_pago': compra.get('metodo_pago'),
+                        'estado': compra.get('estado'),
+                        'fecha_compra': compra.get('fecha_compra'),
+                        'created_at': compra.get('created_at')
+                    })
+
+                # Preparar respuesta con información de paginación
+                respuesta = {
+                    'success': True,
+                    'data': {
+                        'compras': compras_formateadas,
+                        'count': len(compras_formateadas),
+                        'user_id': user_id,
+                        'tenant_id': tenant_id
+                    }
                 }
 
-    except Exception as e:
-        # Excepción y retornar un código de error HTTP 500
-        print("Exception:", str(e))
-        mensaje = {
-            'error': str(e)
-        }        
-        return {
-            'statusCode': 500,
-            'body': mensaje
-        }
+                # Agregar información de paginación si hay más elementos
+                if 'LastEvaluatedKey' in response:
+                    respuesta['data']['pagination'] = {
+                        'hasMore': True,
+                        'nextKey': json.dumps(response['LastEvaluatedKey'])
+                    }
+                else:
+                    respuesta['data']['pagination'] = {
+                        'hasMore': False
+                    }
+
+                return create_response(200, respuesta)
+
+            except ClientError as e:
+                error_code = e.response['Error']['Code']
+                if error_code == 'ResourceNotFoundException':
+                    return create_response(404, {
+                        'success': False,
+                        'error': 'La tabla de compras no existe'
+                    })
+                else:
+                    print(f"Error DynamoDB: {e}")
+                    return create_response(500, {
+                        'success': False,
+                        'error': 'Error al buscar compras'
+                    })
+
+        except Exception as e:
+            print(f"Error interno: {e}")
+            return create_response(500, {
+                'success': False,
+                'error': 'Error interno del servidor'
+            })
+
+    return _handler(event, context)

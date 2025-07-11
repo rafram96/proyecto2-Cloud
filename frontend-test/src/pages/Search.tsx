@@ -35,7 +35,7 @@ const Search: React.FC = () => {
   const categoryParam = searchParams.get('category');
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryParam ? [categoryParam] : []);
-  const [priceRange, setPriceRange] = useState({ min: 100, max: 4000 });
+  const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,49 +46,51 @@ const Search: React.FC = () => {
   // Cargar productos desde la API
   useEffect(() => {
     const loadProducts = async () => {
-      if (user?.tenantId) {
-        try {
-          setLoading(true);
-          const result = await productService.listarProductos();
-          if (result.success && result.data) {
-            setProducts(result.data.productos || []);
-          }
-        } catch (error) {
-          console.error('Error loading products:', error);
-        } finally {
-          setLoading(false);
+      if (!user?.tenantId) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const result = await productService.listarProductos();
+        if (result.success && result.data) {
+          setProducts(result.data.productos || []);
         }
-      } else {
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
         setLoading(false);
       }
     };
-
     loadProducts();
   }, [user?.tenantId]);
 
-   // Escucha cambios en la URL y actualiza la categoría
+  // Actualizar categoría desde URL y reiniciar página
   useEffect(() => {
     const param = searchParams.get('category');
     if (param) {
       setSelectedCategories([param]);
+      setCurrentPage(1);
     }
   }, [searchParams]);
 
-  // Filtrar productos
+  // Filtrar productos localmente
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const matchesSearch = product.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            product.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.categoria);
+      const matchesCategory = selectedCategories.length === 0 ||
+        selectedCategories.some(cat => product.categoria.toLowerCase().includes(cat.toLowerCase()));
       const matchesPrice = product.precio >= priceRange.min && product.precio <= priceRange.max;
       return matchesSearch && matchesCategory && matchesPrice;
     });
   }, [products, searchQuery, selectedCategories, priceRange]);
 
+  // Paginación local sobre productos filtrados
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const paginatedProducts = useMemo(() => {
-    const startIndex = (currentPage - 1) * productsPerPage;
-    return filteredProducts.slice(startIndex, startIndex + productsPerPage).map(convertToProductCardFormat);
+    const start = (currentPage - 1) * productsPerPage;
+    return filteredProducts.slice(start, start + productsPerPage).map(convertToProductCardFormat);
   }, [filteredProducts, currentPage]);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -109,11 +111,6 @@ const Search: React.FC = () => {
   const handlePriceRangeChange = (min: number, max: number) => {
     setPriceRange({ min, max });
     setCurrentPage(1);
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -149,9 +146,6 @@ const Search: React.FC = () => {
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center justify-center w-full py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors theme-transition"
             >
-              <svg className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
               <span className="text-gray-700 dark:text-gray-300 font-jaldi">
                 {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
               </span>
@@ -174,9 +168,8 @@ const Search: React.FC = () => {
             <div className="mb-6">
               <p className="text-gray-600 dark:text-gray-400 text-[16px] font-jaldi">
                 {loading ? 'Cargando productos...' : 
-                 `Mostrando ${((currentPage - 1) * productsPerPage) + 1}-${Math.min(currentPage * productsPerPage, filteredProducts.length)} de ${filteredProducts.length} resultados`}
+                 `Mostrando ${(currentPage-1)*productsPerPage+1}-${Math.min(currentPage*productsPerPage, filteredProducts.length)} de ${filteredProducts.length} resultados`}
               </p>
-              <div className="w-full h-px bg-yellow-400 dark:bg-yellow-500 mt-2"></div>
             </div>
             
             {/* Grid de productos */}
@@ -211,12 +204,12 @@ const Search: React.FC = () => {
             )}
             
             {/* Paginación */}
-            {!loading && totalPages > 1 && (
+            {!loading && paginatedProducts.length > productsPerPage && (
               <div className="mt-8">
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
-                  onPageChange={handlePageChange}
+                  onPageChange={setCurrentPage}
                 />
               </div>
             )}

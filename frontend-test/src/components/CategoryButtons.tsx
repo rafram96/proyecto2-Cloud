@@ -3,14 +3,15 @@ import type { FC } from 'react';
 
 interface CategoryButtonsProps {
   icon: React.ReactNode;
-  label: string; // usamos `label` como categoría
+  label: string; // texto a mostrar
+  value: string; // valor real para filtrar categoría
 }
 
-const CategoryButtons: FC<CategoryButtonsProps> = ({ icon, label }) => {
+const CategoryButtons: FC<CategoryButtonsProps> = ({ icon, label, value }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    const query = new URLSearchParams({ category: label }).toString();
+    const query = new URLSearchParams({ category: value }).toString();
     navigate(`/search?${query}`);
   };
 

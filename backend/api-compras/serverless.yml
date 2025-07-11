@@ -1,106 +1,175 @@
 org: rafaelram
 service: api-compras
 
+package:
+  individually: true
+  patterns:
+    - '!*.zip'
+    - '!*.tar.gz'
+    - '!.git/**'
+    - '!.vscode/**'
+    - '!*.md'
+    - '!coverage/**'
+
 provider:
   name: aws
-  runtime: python3.13
-  timeout: 30
+  runtime: python3.9
+  memorySize: 1024
+  timeout: 29
+  stage: ${opt:stage, 'dev'}
   iam:
-    role: arn:aws:iam::498917627164:role/LabRole
-    environment:
-    COMPRAS_TABLE: p_compras
-    PRODUCTOS_TABLE: p_productos
-    STAGE: dev
+    role: arn:aws:iam::582232142172:role/LabRole
+  environment:
+    COMPRAS_TABLE: compras-${self:provider.stage}
+    PRODUCTOS_TABLE: productos-${self:provider.stage}
+    JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
+    STAGE: ${self:provider.stage}
+    COMPRAS_BUCKET: compras-data-${self:provider.stage}
+
+layers:
+  jwt:
+    path: layers/jwt-layer
 
 functions:
-  crear:
+  crear_compra:
     handler: src/handlers/crear_compra.lambda_handler
+    layers:
+      - { Ref: JwtLambdaLayer }
     events:
       - http:
-          path: /compras/crear
+          path: /compras
           method: post
-          cors: true
-          integration: lambda
-  listar:
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+
+  listar_compras:
     handler: src/handlers/listar_compras.lambda_handler
+    layers:
+      - { Ref: JwtLambdaLayer }
     events:
       - http:
-          path: /compras/listar
-          method: post
-          cors: true
-          integration: lambda
-          path: compras/{usuario_id}
+          path: /compras
           method: get
-          cors: true
-    environment:
-      COMPRAS_TABLE: ${self:custom.tableName}
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
 
-
-
+  compras_stream:
+    handler: src/handlers/compras_stream.lambda_handler
+    layers:
+      - { Ref: JwtLambdaLayer }
+    events:
+      - stream:
+          type: dynamodb
+          arn: !GetAtt ComprasTable.StreamArn
+          startingPosition: LATEST
+          batchSize: 10
+          batchWindow: 5
 
 resources:
   Resources:
     ComprasTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.tableName}
+        TableName: compras-${self:provider.stage}
         AttributeDefinitions:
-          - AttributeName: compra_id
-            AttributeType: S
-          - AttributeName: usuario_id
-            AttributeType: S
           - AttributeName: tenant_id
             AttributeType: S
-          - AttributeName: created_at
+          - AttributeName: SK
+            AttributeType: S
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: fecha_compra
             AttributeType: S
         KeySchema:
-          - AttributeName: compra_id
+          - AttributeName: tenant_id
             KeyType: HASH
+          - AttributeName: SK
+            KeyType: RANGE
         GlobalSecondaryIndexes:
-          - IndexName: UsuarioTenantIndex
-            KeySchema:
-              - AttributeName: usuario_id
-                KeyType: HASH
-              - AttributeName: tenant_id
-                KeyType: RANGE
-            Projection:
-              ProjectionType: ALL
-            BillingMode: PAY_PER_REQUEST
-          - IndexName: TenantFechaIndex
+          - IndexName: UserComprasIndex
             KeySchema:
               - AttributeName: tenant_id
                 KeyType: HASH
-              - AttributeName: created_at
+              - AttributeName: user_id
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
-            BillingMode: PAY_PER_REQUEST
+          - IndexName: FechaComprasIndex
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: fecha_compra
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         StreamSpecification:
           StreamViewType: NEW_AND_OLD_IMAGES
         Tags:
           - Key: Environment
-            Value: ${self:custom.stage}
+            Value: ${self:provider.stage}
           - Key: Service
             Value: api-compras
+
+    # Bucket para datos de compras (CSV/JSON)
+    ComprasDataBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: compras-data-${self:provider.stage}
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
+    # Bucket policy para acceso del servicio
+    ComprasDataBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref ComprasDataBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: AllowLambdaAccess
+              Effect: Allow
+              Principal:
+                AWS: "arn:aws:iam::582232142172:role/LabRole"
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+              Resource: !Sub "arn:aws:s3:::compras-data-${self:provider.stage}/*"
 
   Outputs:
     ApiGatewayRestApiId:
       Value: !Ref ApiGatewayRestApi
       Export:
-        Name: ${self:service}-${self:custom.stage}-ApiId
+        Name: ${self:service}-${self:provider.stage}-ApiId
     ComprasTableName:
       Value: !Ref ComprasTable
       Export:
-        Name: ${self:service}-${self:custom.stage}-ComprasTable
+        Name: ${self:service}-${self:provider.stage}-ComprasTable
     ComprasTableArn:
       Value: !GetAtt ComprasTable.Arn
       Export:
-        Name: ${self:service}-${self:custom.stage}-ComprasTableArn
+        Name: ${self:service}-${self:provider.stage}-ComprasTableArn
     ComprasTableStreamArn:
       Value: !GetAtt ComprasTable.StreamArn
       Export:
-        Name: ${self:service}-${self:custom.stage}-ComprasTableStreamArn
-
-plugins:
-  - serverless-python-requirements
+        Name: ${self:service}-${self:provider.stage}-ComprasTableStreamArn

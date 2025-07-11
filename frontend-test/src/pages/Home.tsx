@@ -10,12 +10,12 @@ import type { Product } from '../types/product';
 import { useAuth } from '../contexts/AuthContext';
 
 const categories = [
-  { icon: <FaGamepad size={50} />, label: 'Gaming Gear' },
-  { icon: <FaMobileAlt size={50} />, label: 'Smartphones' },
-  { icon: <FaLaptop size={50} />, label: 'Laptops & PCs' },
-  { icon: <FaHeadphones size={50} />, label: 'Audio & Headphones' },
-  { icon: <FaPlug size={50} />, label: 'Accessories' },
-  { icon: <FaTv size={50} />, label: 'TV & Monitors' },
+  { icon: <FaGamepad size={50} />, label: 'Gaming Gear', value: 'gaming' },
+  { icon: <FaMobileAlt size={50} />, label: 'Smartphones', value: 'smartphones' },
+  { icon: <FaLaptop size={50} />, label: 'Laptops & PCs', value: 'laptops' },
+  { icon: <FaHeadphones size={50} />, label: 'Audio & Headphones', value: 'audio' },
+  { icon: <FaPlug size={50} />, label: 'Accessories', value: 'accessories' },
+  { icon: <FaTv size={50} />, label: 'TV & Monitors', value: 'tv' },
 ];
 
 // Función para convertir el producto de la API al formato esperado por ProductCard
@@ -83,9 +83,10 @@ const Home: React.FC = () => {
         <section className="flex flex-wrap justify-center mt-10 gap-6">
           {categories.map((category) => (
             <CategoryButtons
-              key={category.label}
+              key={category.value}
               icon={category.icon}
               label={category.label}
+              value={category.value}
             />
           ))}
         </section>
