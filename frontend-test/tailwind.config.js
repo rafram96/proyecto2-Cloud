@@ -23,6 +23,11 @@ module.exports = {
         amarillo2:  '#FCF7D5',
         amarillo3:  '#FFF0AD',
         amarillo4:  '#FDF7DD',
+        // Tonos dorados más elegantes
+        dorado1:    '#DAA520',  // Goldenrod
+        dorado2:    '#F4D03F',  // Dorado suave
+        dorado3:    '#B8860B',  // Dark goldenrod
+        dorado4:    '#FFE5B4',  // Peach puff
         gris:       '#F2F2F2',
         gris2:      '#434343',
         // Colores para tema oscuro
