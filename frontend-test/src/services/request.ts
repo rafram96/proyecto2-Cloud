@@ -1,5 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const PRODUCTS_BASE_URL = import.meta.env.VITE_PRODUCTS_API_URL;
+const AUTH_BASE_URL = import.meta.env.VITE_AUTH_API_URL; // Para api-usuarios/autenticación
+const PRODUCTS_BASE_URL = import.meta.env.VITE_PRODUCTS_API_URL; // Para api-productos
+const COMPRAS_BASE_URL = import.meta.env.VITE_COMPRAS_API_URL; // Para api-compras
 
 /**
  * Wrapper genérico para llamadas al API con fetch.
@@ -17,10 +18,39 @@ export async function request<T>(
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(`${AUTH_BASE_URL}${path}`, {
     ...options,
     headers,
   });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw payload;
+  }
+  return payload;
+}
+
+/**
+ * Wrapper específico para llamadas a la API de compras.
+ */
+export async function requestCompras<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = localStorage.getItem('token'); // Cambié de 'authToken' a 'token'
+  const tenantId = localStorage.getItem('tenant_id') || 'test1';
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    'X-Tenant-Id': tenantId,
+    ...(options.headers as Record<string, string>),
+  };
+
+  const response = await fetch(`${COMPRAS_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
+  
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw payload;

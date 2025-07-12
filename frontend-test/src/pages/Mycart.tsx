@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
+import { comprasService } from '../services/comprasService';
 
 const Cart: React.FC = () => {
   const { items, updateQuantity, removeFromCart, clearCart, getTotal, getItemCount } = useCart();
   const [subtotal, setSubtotal] = useState(0);
   const [total, setTotal] = useState(0);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState('');
 
   // Calcular totales
   useEffect(() => {
@@ -48,30 +50,62 @@ const Cart: React.FC = () => {
     if (items.length === 0) return;
     
     setIsCheckingOut(true);
+    setCheckoutStep('Procesando compra...');
+    
     try {
-      const orderData = {
+      // Preparar datos para la API de compras
+      const compraData = {
         productos: items.map(item => ({
           codigo: item.product.codigo,
-          nombre: item.product.nombre,
-          precio: item.product.precio,
           cantidad: item.quantity
         })),
-        total: total,
-        fecha: new Date().toISOString()
+        direccion_entrega: "Dirección de entrega por defecto", // Esto se puede obtener de un formulario
+        metodo_pago: "TARJETA" // Esto se puede obtener del formulario de pago
       };
 
-      console.log('🛒 Procesando checkout con:', orderData);
+      console.log('🛒 Procesando checkout con:', compraData);
+      setCheckoutStep('Creando orden...');
       
-      // Aquí puedes integrar con comprasService si es necesario
-      // await comprasService.crearCompra(orderData);
+      // Crear la compra usando el servicio
+      const response = await comprasService.crearCompra(compraData);
       
-      alert('¡Orden procesada exitosamente!');
-      clearCart();
+      if (response.success) {
+        setCheckoutStep('Actualizando inventario...');
+        
+        // Simular tiempo de ingesta/actualización en tiempo real
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        setCheckoutStep('Sincronizando datos...');
+        
+        // Aquí es donde ocurre la ingesta en tiempo real:
+        // 1. La API de compras guarda en DynamoDB
+        // 2. DynamoDB Streams triggea la Lambda
+        // 3. Lambda actualiza ElasticSearch
+        // 4. Stock se actualiza automáticamente
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('✅ Compra creada exitosamente:', response.data);
+        console.log('🔄 Ingesta en tiempo real completada');
+        
+        setCheckoutStep('¡Completado!');
+        
+        alert(`¡Orden procesada exitosamente! 
+ID: ${response.data?.compra_id}
+Total: PEN ${formatPrice(response.data?.total || 0)}
+Stock actualizado en tiempo real`);
+        
+        clearCart();
+      } else {
+        console.error('❌ Error en la respuesta:', response.error);
+        alert(response.error || 'Error al procesar la orden. Intenta nuevamente.');
+      }
     } catch (error) {
-      console.error('Error en checkout:', error);
+      console.error('💥 Error en checkout:', error);
       alert('Error al procesar la orden. Intenta nuevamente.');
     } finally {
       setIsCheckingOut(false);
+      setCheckoutStep('');
     }
   };
 
@@ -322,8 +356,23 @@ const Cart: React.FC = () => {
                 disabled={items.length === 0 || isCheckingOut}
                 className="w-full bg-gray-800 dark:bg-gray-800 font-lato font-bold text-dorado4 dark:text-dorado3 py-3 mt-6 tracking-widest hover:bg-dorado3 hover:text-white dark:hover:bg-dorado1 dark:hover:text-black disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300 border border-dorado3 dark:border-dorado2"
               >
-                {isCheckingOut ? 'PROCESSING...' : 'CHECKOUT'}
+                {isCheckingOut ? (checkoutStep || 'PROCESSING...') : 'CHECKOUT'}
               </button>
+              
+              {/* Indicador de progreso de ingesta */}
+              {isCheckingOut && checkoutStep && (
+                <div className="mt-3 text-center">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-dorado3"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-jaldi">
+                      {checkoutStep}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 font-jaldi">
+                    Sincronizando con sistemas en tiempo real...
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

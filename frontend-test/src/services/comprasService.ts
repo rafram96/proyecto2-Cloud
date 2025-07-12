@@ -1,4 +1,4 @@
-import { request } from './request';
+import { requestCompras } from './request';
 
 const API_URL = import.meta.env.VITE_COMPRAS_API_URL || 'TBD';
 
@@ -58,7 +58,7 @@ export interface CrearCompraResponse {
 
 class ComprasService {
   private getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token'); // Cambié de 'authToken' a 'token' para coincidir con authService
     const tenantId = localStorage.getItem('tenant_id') || 'test1';
     
     return {
@@ -127,9 +127,8 @@ class ComprasService {
         };
       }
 
-      const response = await request(`${API_URL}/compras`, {
+      const response = await requestCompras(`/compras`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
         body: JSON.stringify(compraData)
       }) as any;
 
@@ -236,9 +235,9 @@ class ComprasService {
         queryParams.append('lastKey', lastKey);
       }
 
-      const url = `${API_URL}/compras?${queryParams.toString()}`;
+      let path = `/compras?${queryParams.toString()}`;
 
-      const response = await request(url, {
+      const response = await requestCompras(path, {
         method: 'GET',
         headers: this.getAuthHeaders()
       }) as any;
@@ -310,7 +309,7 @@ class ComprasService {
         };
       }
 
-      const response = await request(`${API_URL}/compras/${compraId}`, {
+      const response = await requestCompras(`/compras/${compraId}`, {
         method: 'GET',
         headers: this.getAuthHeaders()
       }) as any;
