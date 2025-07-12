@@ -34,7 +34,7 @@ const AppLayout: React.FC = () => {
         <Routes>
           <Route path="/login"   element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/view-order" element={
+          <Route path="/view-order/:orderId" element={
             <ProtectedRoute>
               <ViewOrder />
             </ProtectedRoute>

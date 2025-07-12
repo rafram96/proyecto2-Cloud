@@ -196,9 +196,6 @@ const ViewOrder: React.FC = () => {
                         {producto.nombre}
                       </h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Código: {producto.codigo}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         Precio unitario: {formatPrice(producto.precio_unitario)}
                       </p>
                     </div>

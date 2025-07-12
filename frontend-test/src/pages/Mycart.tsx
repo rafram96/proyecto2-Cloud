@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { useCart } from '../hooks/useCart';
 import { comprasService } from '../services/comprasService';
+import { cardsService, type SavedCard } from '../services/cardsService';
 
 const Cart: React.FC = () => {
   const { items, updateQuantity, removeFromCart, clearCart, getTotal, getItemCount } = useCart();
@@ -9,13 +10,39 @@ const Cart: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState('');
-
+  
+  // Estados para el sistema de tarjetas
+  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
+  const [selectedCard, setSelectedCard] = useState<SavedCard | null>(null);
+  const [showNewCardForm, setShowNewCardForm] = useState(false);
+  const [cardFormData, setCardFormData] = useState({
+    name: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+    saveCard: false
+  });
+  
   // Calcular totales
   useEffect(() => {
     const calculatedSubtotal = getTotal();
     setSubtotal(calculatedSubtotal);
     setTotal(calculatedSubtotal); // Shipping es 0
   }, [items, getTotal]);
+
+  // Cargar tarjetas guardadas al montar el componente
+  useEffect(() => {
+    const cards = cardsService.getSavedCards();
+    setSavedCards(cards);
+    
+    // Seleccionar tarjeta por defecto
+    const defaultCard = cards.find(card => card.isDefault);
+    if (defaultCard) {
+      setSelectedCard(defaultCard);
+    } else if (cards.length > 0) {
+      setSelectedCard(cards[0]); // Si no hay default, seleccionar la primera
+    }
+  }, []);
 
   const handleQuantityChange = (productCode: string, change: number) => {
     const item = items.find(item => item.product.codigo === productCode);
@@ -49,6 +76,44 @@ const Cart: React.FC = () => {
   const handleCheckout = async () => {
     if (items.length === 0) return;
     
+    // Validar que tenga tarjeta seleccionada o datos de nueva tarjeta
+    if (!selectedCard && !showNewCardForm) {
+      alert('Por favor selecciona una tarjeta o agrega una nueva');
+      return;
+    }
+
+    // Si está agregando nueva tarjeta, validar campos
+    if (showNewCardForm) {
+      if (!cardFormData.name || !cardFormData.cardNumber || !cardFormData.expiryDate || !cardFormData.cvv) {
+        alert('Por favor completa todos los campos de la tarjeta');
+        return;
+      }
+      
+      // Si quiere guardar la tarjeta, guardarla
+      if (cardFormData.saveCard) {
+        const newCard = cardsService.saveCard({
+          name: cardFormData.name,
+          cardNumber: cardFormData.cardNumber,
+          expiryDate: cardFormData.expiryDate,
+          cardType: cardsService.detectCardType(cardFormData.cardNumber),
+          isDefault: savedCards.length === 0
+        });
+        
+        setSavedCards(prev => [...prev, newCard]);
+        setSelectedCard(newCard);
+        setShowNewCardForm(false);
+        
+        // Limpiar formulario
+        setCardFormData({
+          name: '',
+          cardNumber: '',
+          expiryDate: '',
+          cvv: '',
+          saveCard: false
+        });
+      }
+    }
+    
     setIsCheckingOut(true);
     setCheckoutStep('Procesando compra...');
     
@@ -57,10 +122,14 @@ const Cart: React.FC = () => {
       const compraData = {
         productos: items.map(item => ({
           codigo: item.product.codigo,
+          nombre: item.product.nombre, // Agregar nombre del producto
+          precio: item.product.precio, // Agregar precio del producto
           cantidad: item.quantity
         })),
         direccion_entrega: "Dirección de entrega por defecto", // Esto se puede obtener de un formulario
-        metodo_pago: "TARJETA" // Esto se puede obtener del formulario de pago
+        metodo_pago: selectedCard ? 
+          `TARJETA (${selectedCard.cardNumber})` : 
+          `TARJETA (****${cardFormData.cardNumber.slice(-4)})`
       };
 
       console.log('🛒 Procesando checkout con:', compraData);
@@ -90,9 +159,14 @@ const Cart: React.FC = () => {
         
         setCheckoutStep('¡Completado!');
         
+        const tarjetaInfo = selectedCard ? 
+          `Tarjeta: ${selectedCard.cardNumber}` : 
+          `Tarjeta: ****${cardFormData.cardNumber.slice(-4)}`;
+        
         alert(`¡Orden procesada exitosamente! 
 ID: ${response.data?.compra_id}
 Total: PEN ${formatPrice(response.data?.total || 0)}
+${tarjetaInfo}
 Stock actualizado en tiempo real`);
         
         clearCart();
@@ -254,73 +328,175 @@ Stock actualizado en tiempo real`);
           {/* Payment Information */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-[32px] font-koulen text-black dark:text-white mb-4">
+              <h3 className="text-[32px] font-koulen text-gray-800 dark:text-white mb-4">
                 PAYMENT INFORMATION
               </h3>
 
               <div className="space-y-4">
-                {/* Tarjeta simulada */}
-                <div className="border-4 border-gray-600 dark:border-gray-400 rounded-lg p-[30px] bg-white dark:bg-gray-800">
-                  <div className="flex flex-row-reverse">
-                    <div className="h-2 bg-gray-300 dark:bg-gray-600 w-[100px] mb-5 rounded"></div>
+                {/* Selector de tarjetas guardadas */}
+                {savedCards.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300">
+                      TARJETAS GUARDADAS
+                    </h4>
+                    <div className="space-y-2">
+                      {savedCards.map((card) => (
+                        <div
+                          key={card.id}
+                          onClick={() => {
+                            setSelectedCard(card);
+                            setShowNewCardForm(false);
+                          }}
+                          className={`
+                            p-3 border-2 rounded-lg cursor-pointer transition-all duration-200
+                            ${selectedCard?.id === card.id
+                              ? 'border-dorado2 bg-dorado4 bg-opacity-10'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-dorado3'
+                            }
+                          `}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <span className="text-2xl">💳</span>
+                              <div>
+                                <p className="font-lato font-medium text-gray-800 dark:text-white">
+                                  {card.name}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {card.cardNumber} • {card.expiryDate}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {selectedCard?.id === card.id && (
+                              <div className="w-5 h-5 bg-dorado2 rounded-full flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Botón para agregar nueva tarjeta */}
+                    <button
+                      onClick={() => {
+                        setShowNewCardForm(!showNewCardForm);
+                        if (showNewCardForm) {
+                          setSelectedCard(savedCards.find(card => card.isDefault) || null);
+                        } else {
+                          setSelectedCard(null);
+                        }
+                      }}
+                      className="w-full p-3 border-2 border-dashed border-dorado3 rounded-lg text-dorado3 hover:bg-dorado4 hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center space-x-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span className="font-lato font-medium">
+                        {showNewCardForm ? 'Cancelar' : 'Agregar Nueva Tarjeta'}
+                      </span>
+                    </button>
                   </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="w-9 h-7 bg-gray-800 dark:bg-gray-200 rounded"></div>
-                  </div>
-                  <div className="flex justify-between items-center mt-7">
-                    <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
-                    <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
-                    <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
-                    <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
-                  </div>
-                  <div className="h-2 bg-gray-300 dark:bg-gray-600 w-[150px] mt-3 rounded"></div>
-                </div>
+                )}
 
-                {/* Campos del formulario */}
-                <div>
-                  <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    NAME ON CARD
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Name on card"
-                    className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
-                  />
-                </div>
+                {/* Formulario para nueva tarjeta o primera tarjeta */}
+                {(showNewCardForm || savedCards.length === 0) && (
+                  <div className="space-y-4">
+                    {savedCards.length === 0 && (
+                      <h4 className="text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300">
+                        INFORMACIÓN DE TARJETA
+                      </h4>
+                    )}
+                    
+                    {/* Tarjeta simulada - mantener el diseño original */}
+                    <div className="border-4 border-gray-600 dark:border-gray-400 rounded-lg p-[30px] bg-white dark:bg-gray-800">
+                      <div className="flex flex-row-reverse">
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 w-[100px] mb-5 rounded"></div>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="w-9 h-7 bg-gray-800 dark:bg-gray-200 rounded"></div>
+                      </div>
+                      <div className="flex justify-between items-center mt-7">
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                        <div className="h-2 bg-gray-300 dark:bg-gray-600 w-12 rounded"></div>
+                      </div>
+                      <div className="h-2 bg-gray-300 dark:bg-gray-600 w-[150px] mt-3 rounded"></div>
+                    </div>
 
-                <div>
-                  <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
-                    CARD NUMBER
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Card number"
-                    className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
-                  />
-                </div>
+                    {/* Campos del formulario - mantener diseño original */}
+                    <div>
+                      <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        NAME ON CARD
+                      </label>
+                      <input
+                        type="text"
+                        value={cardFormData.name}
+                        onChange={(e) => setCardFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Name on card"
+                        className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
+                      />
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      EXPIRATION DATE
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="MM / YY"
-                      className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
-                    />
+                    <div>
+                      <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
+                        CARD NUMBER
+                      </label>
+                      <input
+                        type="text"
+                        value={cardFormData.cardNumber}
+                        onChange={(e) => setCardFormData(prev => ({ ...prev, cardNumber: e.target.value }))}
+                        placeholder="Card number"
+                        className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
+                          EXPIRATION DATE
+                        </label>
+                        <input
+                          type="text"
+                          value={cardFormData.expiryDate}
+                          onChange={(e) => setCardFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                          placeholder="MM / YY"
+                          className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
+                          CVV
+                        </label>
+                        <input
+                          type="text"
+                          value={cardFormData.cvv}
+                          onChange={(e) => setCardFormData(prev => ({ ...prev, cvv: e.target.value }))}
+                          placeholder="CVV / Security code"
+                          className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Checkbox para guardar tarjeta */}
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="saveCard"
+                        checked={cardFormData.saveCard}
+                        onChange={(e) => setCardFormData(prev => ({ ...prev, saveCard: e.target.checked }))}
+                        className="w-4 h-4 text-dorado2 bg-transparent border-2 border-gray-400 rounded focus:ring-dorado2 focus:ring-2"
+                      />
+                      <label htmlFor="saveCard" className="text-sm font-lato text-gray-700 dark:text-gray-300">
+                        Guardar esta tarjeta para futuras compras
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300 mb-2">
-                      CVV
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="CVV / Security code"
-                      className="w-full pb-1 bg-transparent border-0 border-b-2 text-[15px] font-jaldi border-gray-400 dark:border-gray-600 focus:border-dorado3 dark:focus:border-dorado2 focus:outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-white"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 

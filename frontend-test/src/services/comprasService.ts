@@ -14,6 +14,8 @@ export interface CompraData {
   productos: Array<{
     codigo: string;
     cantidad: number;
+    nombre?: string; // Opcional - nombre del producto
+    precio?: number | string; // Opcional - precio del producto
   }>;
   direccion_entrega: string;
   metodo_pago: string;
@@ -73,33 +75,65 @@ class ComprasService {
       console.log('Creando compra:', compraData);
       
       if (API_URL === 'TBD') {
-        console.warn('API de compras no configurada, usando datos mock');
+        console.log('🔄 MOCK: API de compras no configurada, simulando flujo completo...');
         
-        // Simular tiempo de procesamiento
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Simular validación de datos
+        console.log('📋 MOCK: Validando datos de compra...');
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Simular respuesta exitosa para desarrollo
+        // Simular creación en DynamoDB
+        console.log('💾 MOCK: Guardando compra en DynamoDB...');
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Simular trigger de DynamoDB Streams
+        console.log('🌊 MOCK: DynamoDB Streams activado...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Simular Lambda de ingesta
+        console.log('⚡ MOCK: Lambda Actualizar Compras ejecutándose...');
+        await new Promise(resolve => setTimeout(resolve, 700));
+        
+        // Simular guardado en S3
+        console.log('📁 MOCK: Guardando datos en S3 (CSV/JSON)...');
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        // Simular actualización de stock en productos
+        console.log('📦 MOCK: Actualizando stock de productos...');
+        await new Promise(resolve => setTimeout(resolve, 400));
+        
+        console.log('✅ MOCK: Ingesta en tiempo real completada exitosamente!');
+        
+        // Generar respuesta mock realista
         const compraId = `COMPRA-${Date.now()}`;
         const total = compraData.productos.reduce((sum, p) => {
           // Simular precios basados en el código del producto
           const precioMock = p.codigo.includes('PHONE') ? 1200 : 
                            p.codigo.includes('LAPTOP') ? 1500 : 
-                           p.codigo.includes('TABLET') ? 800 : 300;
+                           p.codigo.includes('TABLET') ? 800 : 
+                           p.codigo.includes('LENOVO') ? 666 :
+                           300;
           return sum + (p.cantidad * precioMock);
         }, 0);
         
         const nuevaCompra = {
           compra_id: compraId,
           productos: compraData.productos.map(p => {
-            const precioMock = p.codigo.includes('PHONE') ? 1200 : 
-                             p.codigo.includes('LAPTOP') ? 1500 : 
-                             p.codigo.includes('TABLET') ? 800 : 300;
+            // Usar precio real si está disponible, sino usar mock
+            const precioReal = p.precio ? (typeof p.precio === 'string' ? parseFloat(p.precio) : p.precio) : null;
+            const precioFinal = precioReal || (
+              p.codigo.includes('PHONE') ? 1200 : 
+              p.codigo.includes('LAPTOP') ? 1500 : 
+              p.codigo.includes('TABLET') ? 800 :
+              p.codigo.includes('LENOVO') ? 666 :
+              300
+            );
+            
             return {
               codigo: p.codigo,
-              nombre: `Producto ${p.codigo}`,
-              precio_unitario: precioMock,
+              nombre: p.nombre || `Producto ${p.codigo}`, // Usar nombre real si está disponible
+              precio_unitario: precioFinal,
               cantidad: p.cantidad,
-              subtotal: p.cantidad * precioMock
+              subtotal: p.cantidad * precioFinal
             };
           }),
           total: total,
@@ -114,6 +148,8 @@ class ComprasService {
         const comprasGuardadas = JSON.parse(localStorage.getItem('compras_mock') || '[]');
         comprasGuardadas.unshift(nuevaCompra); // Agregar al inicio
         localStorage.setItem('compras_mock', JSON.stringify(comprasGuardadas));
+        
+        console.log('💾 MOCK: Compra guardada en localStorage para persistencia local');
         
         return {
           success: true,
