@@ -193,11 +193,26 @@ export const productService = {
     limit?: number;
   }) {
     try {
-      const data = await requestProducts<any>('/productos/search', {
+      const response = await requestProducts<any>('/productos/search', {
         method: 'POST',
         body: JSON.stringify(searchParams),
       });
-      return { success: true, data };
+      
+      // Si la respuesta viene en formato Lambda (statusCode + body)
+      if (response.statusCode === 200 && response.body) {
+        const parsedData = typeof response.body === 'string' 
+          ? JSON.parse(response.body) 
+          : response.body;
+        
+        if (parsedData.success && parsedData.data) {
+          return { success: true, data: parsedData.data };
+        } else {
+          return { success: false, error: parsedData.error || 'Error en la búsqueda' };
+        }
+      }
+      
+      // Si la respuesta ya viene parseada
+      return { success: true, data: response };
     } catch (error: any) {
       return { success: false, error: error.error || 'Error en la búsqueda' };
     }
@@ -205,11 +220,26 @@ export const productService = {
 
   async autocompleteProducts(query: string, limit = 5) {
     try {
-      const data = await requestProducts<any>('/productos/autocomplete', {
+      const response = await requestProducts<any>('/productos/autocomplete', {
         method: 'POST',
         body: JSON.stringify({ query, limit }),
       });
-      return { success: true, data };
+      
+      // Si la respuesta viene en formato Lambda (statusCode + body)
+      if (response.statusCode === 200 && response.body) {
+        const parsedData = typeof response.body === 'string' 
+          ? JSON.parse(response.body) 
+          : response.body;
+        
+        if (parsedData.success && parsedData.data) {
+          return { success: true, data: parsedData.data };
+        } else {
+          return { success: false, error: parsedData.error || 'Error en autocompletado' };
+        }
+      }
+      
+      // Si la respuesta ya viene parseada
+      return { success: true, data: response };
     } catch (error: any) {
       return { success: false, error: error.error || 'Error en autocompletado' };
     }

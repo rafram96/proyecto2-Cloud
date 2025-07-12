@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { AVAILABLE_TENANTS } from "../constants/tenants";
 
 type RegisterResult = {
   success: boolean;
@@ -108,19 +109,24 @@ const Register: React.FC = () => {
 
                 <div className="mb-6">
                   <label className="ml-5 font-judson block text-[26px] font-medium text-gray-800 dark:text-gray-200 mb-1">
-                    Tenant ID
+                    Tenant
                   </label>
                   <div className="flex items-center justify-center">
-                    <input
+                    <select
                       value={userData.tenant_id}
                       onChange={(e) =>
                         setUserData({ ...userData, tenant_id: e.target.value })
                       }
-                      className="w-[472px] p-3 pl-5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-jaldi italic placeholder-gray-500 dark:placeholder-gray-400 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 theme-transition"
-                      placeholder="Enter your tenant ID"
-                      type="text"
+                      className="w-[472px] p-3 pl-5 bg-blue-50 dark:bg-gray-700 text-gray-800 dark:text-white font-jaldi rounded-lg border-2 border-blue-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-transparent theme-transition shadow-sm hover:shadow-md"
                       required
-                    />
+                    >
+                      <option value="" className="text-gray-500">Selecciona un tenant</option>
+                      {AVAILABLE_TENANTS.map((tenant) => (
+                        <option key={tenant.value} value={tenant.value} className="text-gray-800 dark:text-gray-100">
+                          {tenant.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 

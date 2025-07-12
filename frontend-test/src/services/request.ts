@@ -37,7 +37,13 @@ export async function requestProducts<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = localStorage.getItem('token');
-  const tenantId = localStorage.getItem('tenantId') || 'tenant1'; // valor por defecto
+  const tenantId = localStorage.getItem('tenantId');
+  
+  // Verificar que tenemos un tenantId válido
+  if (!tenantId) {
+    console.warn('⚠️ No se encontró tenantId en localStorage. El usuario debe estar logueado.');
+    throw new Error('Usuario no autenticado: tenantId requerido');
+  }
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -48,6 +54,8 @@ export async function requestProducts<T>(
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
+  
+  console.log(`📡 Request to ${PRODUCTS_BASE_URL}${path} with tenant: ${tenantId}`);
   
   const response = await fetch(`${PRODUCTS_BASE_URL}${path}`, {
     ...options,

@@ -1,5 +1,6 @@
 // src/App.tsx
 import React from 'react';
+import ProductDetail from './pages/ProductDetail';
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,7 +18,6 @@ import Login    from './pages/Login';
 import Register from './pages/Register';
 import Cart     from './pages/Mycart';
 import Orders   from './pages/Myorders';
-import Product  from './pages/Product';
 import Search   from './pages/Search';
 import MyProducts from './pages/MyProducts';
 import ViewOrder from './pages/ViewOrder';
@@ -62,7 +62,7 @@ const AppLayout: React.FC = () => {
           } />
           <Route path="/product/:id" element={
             <ProtectedRoute>
-              <Product />
+              <ProductDetail />
             </ProtectedRoute>
           } />
           <Route path="/search" element={
@@ -70,7 +70,6 @@ const AppLayout: React.FC = () => {
               <Search />
            </ProtectedRoute>
           } />
-          
         </Routes>
       </div>
     </div>

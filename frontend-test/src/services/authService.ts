@@ -1,4 +1,5 @@
 import api from './api';
+import { TENANT_VALUES, type TenantId } from '../constants/tenants';
 
 /**
  * Servicio de autenticación: register, login, validateToken y logout.
@@ -52,5 +53,34 @@ export const authService = {
 
   getToken() {
     return localStorage.getItem('token');
+  },
+
+  // Funciones de utilidad para testing con diferentes tenants
+  getAvailableTenants() {
+    return TENANT_VALUES;
+  },
+
+  getCurrentTenant() {
+    return localStorage.getItem('tenantId');
+  },
+
+  // Para testing: cambiar tenant manualmente (simula login con diferente tenant)
+  switchTenant(tenantId: string) {
+    const availableTenants = this.getAvailableTenants();
+    if (!availableTenants.includes(tenantId as TenantId)) {
+      console.warn(`⚠️ Tenant ${tenantId} no está en la lista de tenants disponibles:`, availableTenants);
+    }
+    
+    localStorage.setItem('tenantId', tenantId);
+    
+    // Actualizar el usuario en localStorage también
+    const currentUser = this.getCurrentUser();
+    if (currentUser) {
+      currentUser.tenantId = tenantId;
+      localStorage.setItem('user', JSON.stringify(currentUser));
+    }
+    
+    console.log(`🔄 Tenant cambiado a: ${tenantId}`);
+    return tenantId;
   }
 };

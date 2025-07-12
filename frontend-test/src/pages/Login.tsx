@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { AVAILABLE_TENANTS } from "../constants/tenants";
 
 type LoginResult = {
   success: boolean;
@@ -21,10 +22,21 @@ const Login: React.FC = () => {
       setError("Rellenar todos los campos.");
       return;
     }
+    
+    console.log(`🔐 Intentando login con:`, {
+      email: credentials.email,
+      tenant_id: credentials.tenant_id,
+      password: '[OCULTO]'
+    });
+    
     setLoading(true);
     setError("");
     const result = await login(credentials) as LoginResult;
+    
+    console.log(`📋 Resultado del login:`, { success: result.success, error: result.error });
+    
     if (result.success) {
+      console.log(`✅ Login exitoso, redirigiendo a home`);
       navigate("/");
     } else {
       setError(result.error || "Error en login");
@@ -85,17 +97,22 @@ const Login: React.FC = () => {
                 </div>
                 <div className="mb-6">
                   <label className="ml-2 font-judson block text-[24px] font-semibold mb-2 text-gray-800 dark:text-gray-100">
-                    Tenant ID
+                    Tenant
                   </label>
                   <div className="flex items-center justify-center">
-                    <input
+                    <select
                       value={credentials.tenant_id}
                       onChange={(e) => setCredentials({ ...credentials, tenant_id: e.target.value })}
-                      className="w-[472px] p-4 pl-6 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-jaldi placeholder-gray-400 dark:placeholder-gray-400 rounded-xl border-2 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent theme-transition shadow-inner"
-                      placeholder="Enter your tenant ID"
-                      type="text"
-                       required
-                     />
+                      className="w-[472px] p-4 pl-6 bg-blue-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 font-jaldi rounded-xl border-2 border-blue-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-transparent theme-transition shadow-sm hover:shadow-md"
+                      required
+                    >
+                      <option value="" className="text-gray-500">Selecciona un tenant</option>
+                      {AVAILABLE_TENANTS.map((tenant) => (
+                        <option key={tenant.value} value={tenant.value} className="text-gray-800 dark:text-gray-100">
+                          {tenant.label}
+                        </option>
+                      ))}
+                    </select>
                    </div>
                 </div>
 

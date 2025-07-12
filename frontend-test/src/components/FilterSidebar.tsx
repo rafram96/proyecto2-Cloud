@@ -83,8 +83,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               value={priceRange.min}
               onChange={handlePriceChange}
               className="w-16 lg:w-15 text-[15px] px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 theme-transition"
-              min="100"
-              max={priceRange.max - 100}
+              min="1"
+              max={priceRange.max - 1}
             />
             <span className="text-[17px] font-jaldi text-gray-900 dark:text-gray-100">-</span>
             <span className="text-[17px] font-jaldi text-gray-900 dark:text-gray-100">S/.</span>
@@ -94,8 +94,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               value={priceRange.max}
               onChange={handlePriceChange}
               className="w-16 lg:w-15 text-[15px] px-1 py-1 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-yellow-400 dark:focus:ring-yellow-500 theme-transition"
-              min={priceRange.min + 100}
-              max="4000"
+              min={priceRange.min + 1}
+              max="2000"
             />
           </div>
           
@@ -109,19 +109,19 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               <div
                 className="absolute top-1 h-2 bg-black rounded-full -translate-y-1 z-10"
                 style={{
-                  left: `${((priceRange.min - 100) / 3900) * 100}%`,
-                  width: `${((priceRange.max - priceRange.min) / 3900) * 100}%`,
+                  left: `${((priceRange.min - 1) / 1999) * 100}%`,
+                  width: `${((priceRange.max - priceRange.min) / 1999) * 100}%`,
                 }}
               />
 
               {/* Slider MIN */}
               <input
                 type="range"
-                min="100"
-                max="4000"
+                min="1"
+                max="2000"
                 value={priceRange.min}
                 onChange={(e) =>
-                  onPriceRangeChange(Math.min(+e.target.value, priceRange.max - 100), priceRange.max)
+                  onPriceRangeChange(Math.min(+e.target.value, priceRange.max - 1), priceRange.max)
                 }
                 className="absolute w-full h-2 appearance-none rounded-full bg-transparent z-30 pointer-events-none
                   [&::-webkit-slider-thumb]:pointer-events-auto
@@ -135,11 +135,11 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
               {/* Slider MAX */}
               <input
                 type="range"
-                min="100"
-                max="4000"
+                min="1"
+                max="2000"
                 value={priceRange.max}
                 onChange={(e) =>
-                  onPriceRangeChange(priceRange.min, Math.max(+e.target.value, priceRange.min + 100))
+                  onPriceRangeChange(priceRange.min, Math.max(+e.target.value, priceRange.min + 1))
                 }
                 className="absolute w-full h-2 appearance-none rounded-full bg-transparent z-20 pointer-events-none
                   [&::-webkit-slider-thumb]:pointer-events-auto
@@ -155,8 +155,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
             </div>
 
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>S/. 100.00</span>
-              <span>S/. 4000.00</span>
+              <span>S/. 1.00</span>
+              <span>S/. 2000.00</span>
             </div>
             
           

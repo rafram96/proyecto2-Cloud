@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { productService } from '../services/productService';
 import type { Product } from '../types/product';
 import SearchBar from '../components/SearchBar';
+import { ProductEditModal } from '../components/ProductEditModal';
 
 const MyProducts: React.FC = () => {
   const { user } = useAuth();
@@ -19,6 +20,14 @@ const MyProducts: React.FC = () => {
   // Estados para búsqueda y autocompletado
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  
+  // Estados para modal de edición desde búsqueda
+  const [selectedProductForEdit, setSelectedProductForEdit] = useState<Product | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Estados para paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 6;
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -269,6 +278,110 @@ const MyProducts: React.FC = () => {
     } catch (error) {
       console.error('Error:', error);
       alert('Error al eliminar el producto');
+    }
+  };
+
+  // Funciones para búsqueda con modal de edición
+  const handleSuggestionSelect = async (suggestion: string) => {
+    try {
+      console.log(`🎯 Sugerencia seleccionada para edición: "${suggestion}"`);
+      // Buscar el producto específico que coincida con la sugerencia
+      const result = await productService.searchProducts({ query: suggestion, limit: 1 });
+      console.log(`📋 Resultado búsqueda para edición:`, result);
+      
+      if (result.success && result.data?.productos && result.data.productos.length > 0) {
+        const product = result.data.productos[0];
+        console.log(`✅ Producto encontrado para editar:`, product);
+        setSelectedProductForEdit(product);
+        setIsEditModalOpen(true);
+      } else {
+        console.log(`❌ No se encontró producto para editar: "${suggestion}"`);
+        alert('No se encontró el producto para editar');
+      }
+    } catch (error) {
+      console.error('❌ Error al buscar producto para editar:', error);
+      alert('Error al buscar el producto');
+    }
+  };
+
+  const handleQuickSearch = async (query: string) => {
+    try {
+      console.log(`🔍 Búsqueda rápida para edición: "${query}"`);
+      const result = await productService.searchProducts({ query, limit: 1 });
+      console.log(`📋 Resultado búsqueda rápida:`, result);
+      
+      if (result.success && result.data?.productos && result.data.productos.length > 0) {
+        const product = result.data.productos[0];
+        console.log(`✅ Producto encontrado en búsqueda rápida:`, product);
+        setSelectedProductForEdit(product);
+        setIsEditModalOpen(true);
+      } else {
+        console.log(`❌ No se encontró producto en búsqueda rápida: "${query}"`);
+        // Continúa con la búsqueda normal en la lista
+        await handleNormalSearch(query);
+      }
+    } catch (error) {
+      console.error('❌ Error en búsqueda rápida:', error);
+      await handleNormalSearch(query);
+    }
+  };
+
+  const handleNormalSearch = async (query: string) => {
+    try {
+      if (!query.trim()) {
+        await loadProducts();
+        return;
+      }
+      
+      const result = await productService.searchProducts({ query, page: 1, limit: 12 });
+      if (result.success && result.data?.productos) {
+        setProducts(result.data.productos);
+      } else {
+        console.warn('No se encontraron productos');
+        setProducts([]);
+      }
+    } catch (error) {
+      console.error('Error en búsqueda normal:', error);
+    }
+  };
+
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setSelectedProductForEdit(null);
+  };
+
+  const handleEditModalSave = async (_updatedProduct: Product) => {
+    // Actualizar la lista de productos
+    await loadProducts();
+    console.log('✅ Producto actualizado desde modal, lista recargada');
+  };
+
+  const handleEditModalDelete = async (_productCode: string) => {
+    // Actualizar la lista de productos
+    await loadProducts();
+    console.log('✅ Producto eliminado desde modal, lista recargada');
+  };
+
+  // Funciones de paginación
+  const totalPages = Math.ceil((products?.length || 0) / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = products?.slice(startIndex, endIndex) || [];
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
     }
   };
 
@@ -597,48 +710,41 @@ const MyProducts: React.FC = () => {
           </div>
         )}
 
-        {/* Barra de búsqueda de productos */}
-        <SearchBar
-          placeholder="Buscar productos..."
-          onSearch={async (q) => {
-            try {
-              if (!q.trim()) {
-                // Si búsqueda vacía, cargar todos los productos
-                await loadProducts();
-                return;
-              }
-              
-              const result = await productService.searchProducts({ query: q, page: 1, limit: 12 });
-              if (result.success && result.data?.productos) {
-                setProducts(result.data.productos);
-              } else {
-                console.warn('No se encontraron productos');
-                setProducts([]);
-              }
-            } catch (error) {
-              console.error('Error en búsqueda:', error);
-            }
-          }}
-          onAutocomplete={async (q) => {
-            try {
-              if (!q.trim()) {
-                setSuggestions([]);
-                return;
-              }
-              
-              const result = await productService.autocompleteProducts(q, 5);
-              if (result.success && result.data?.suggestions) {
-                setSuggestions(result.data.suggestions);
-              } else {
+        {/* Barra de búsqueda de productos con edición rápida */}
+        <div className="mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+            <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              🚀 Edición Rápida
+            </h3>
+            <p className="text-blue-700 dark:text-blue-300 text-sm">
+              Escribe el nombre de un producto y selecciona de las sugerencias para editarlo directamente
+            </p>
+          </div>
+          <SearchBar
+            placeholder="Buscar producto para editar... (ej: headphones, laptop)"
+            onSearch={handleQuickSearch}
+            onAutocomplete={async (q) => {
+              try {
+                if (!q.trim()) {
+                  setSuggestions([]);
+                  return;
+                }
+                
+                const result = await productService.autocompleteProducts(q, 5);
+                if (result.success && result.data?.suggestions) {
+                  setSuggestions(result.data.suggestions);
+                } else {
+                  setSuggestions([]);
+                }
+              } catch (error) {
+                console.error('Error en autocomplete:', error);
                 setSuggestions([]);
               }
-            } catch (error) {
-              console.error('Error en autocomplete:', error);
-              setSuggestions([]);
-            }
-          }}
-          suggestions={suggestions}
-        />
+            }}
+            onSuggestionSelect={handleSuggestionSelect}
+            suggestions={suggestions}
+          />
+        </div>
 
         {/* Lista de productos */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl theme-transition">
@@ -678,7 +784,7 @@ const MyProducts: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {(products || []).map((product) => (
+                    {currentProducts.map((product) => (
                       <tr key={product.codigo} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <td className="py-4 px-4">
                           <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-lg overflow-hidden">
@@ -724,6 +830,17 @@ const MyProducts: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Modal de edición rápida */}
+        {isEditModalOpen && selectedProductForEdit && (
+          <ProductEditModal
+            isOpen={isEditModalOpen}
+            onClose={handleEditModalClose}
+            product={selectedProductForEdit}
+            onSave={handleEditModalSave}
+            onDelete={handleEditModalDelete}
+          />
+        )}
       </div>
     </div>
   );

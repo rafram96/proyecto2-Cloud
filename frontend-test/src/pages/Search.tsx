@@ -35,7 +35,7 @@ const Search: React.FC = () => {
   const categoryParam = searchParams.get('category');
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(categoryParam ? [categoryParam] : []);
-  const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity });
+  const [priceRange, setPriceRange] = useState({ min: 1, max: 2000 });
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

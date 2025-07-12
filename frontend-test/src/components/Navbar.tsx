@@ -1,11 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../hooks/useCart';
 import ThemeToggle from './ThemeToggle';
+import { TenantSwitcher } from './TenantSwitcher';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { getItemCount } = useCart();
 
   const handleHome = () => navigate('/');
   const handleCart = () => navigate('/cart');
@@ -15,6 +18,8 @@ const Navbar: React.FC = () => {
     logout();
     navigate('/login');
   };
+
+  const cartItemCount = getItemCount();
 
   // Usar tenantId como nombre de marca, con fallback a 'ELEKTRA'
   const brandName = user?.tenantId?.toUpperCase() || 'ELEKTRA';
@@ -31,6 +36,7 @@ const Navbar: React.FC = () => {
       </button>
 
       <div className="flex gap-4 items-center">
+        <TenantSwitcher />
         <span className="font-jaldi text-[16px] text-gray-300 dark:text-gray-400">
           {user?.email}
         </span>
@@ -68,7 +74,7 @@ const Navbar: React.FC = () => {
             <path d="M3 3h2l2 12a3 3 0 0 0 3 2h7a3 3 0 0 0 3-2l1-7h-15.2" />
           </svg>
           <div className="absolute -bottom-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-black bg-yellow-400 dark:bg-yellow-300 rounded-full shadow-lg">
-            3
+            {cartItemCount}
           </div>
         </button>
         <button 

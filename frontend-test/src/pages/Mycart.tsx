@@ -153,8 +153,8 @@ const Cart: React.FC = () => {
             </p>
             
             <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.product.codigo} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md theme-transition">
+              {items.map((item, index) => (
+                <div key={`${item.product.codigo}-${index}`} className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md theme-transition">
                   <div className="flex items-center gap-6">
                     {/* Product Image */}
                     <div className="w-20 h-20 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0">
