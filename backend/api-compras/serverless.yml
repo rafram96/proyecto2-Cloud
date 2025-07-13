@@ -1,3 +1,40 @@
+  get_compra:
+    handler: src/handlers/get_compra.lambda_handler
+    layers:
+      - { Ref: JwtLambdaLayer }
+    events:
+      - http:
+          path: /compras/{compra_id}
+          method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
+
+  get_compra_options:
+    handler: src/handlers/get_compra.lambda_handler
+    layers:
+      - { Ref: JwtLambdaLayer }
+    events:
+      - http:
+          path: /compras/{compra_id}
+          method: options
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Tenant-Id
+              - X-Amz-Date
+              - X-Api-Key
+              - X-Amz-Security-Token
+            allowCredentials: false
 org: rafaelram
 service: api-compras
 

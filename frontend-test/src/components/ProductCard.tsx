@@ -55,34 +55,35 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <div 
       className="bg-white dark:bg-gray-800 hover:shadow-xl dark:hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group theme-transition flex flex-col h-full"
+      style={{ maxWidth: 240, minWidth: 200, width: '100%', minHeight: 340 }}
       onClick={handleProductClick}
     >
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden" style={{ height: 160 }}>
         {product.discount && (
           <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg">
             -{product.discount}%
           </div>
         )}
-        <div className="aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+        <div className="w-full h-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-contain max-h-[140px] max-w-[90%] group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
               e.currentTarget.src = '/placeholder.png';
             }}
           />
         </div>
       </div>
-      
-      <div className="p-4 flex-1 flex flex-col justify-between">
+
+      <div className="p-3 flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="text-sm font-lato font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 leading-tight">
+          <h3 className="text-base font-lato font-medium text-gray-900 dark:text-white mb-2 line-clamp-2 leading-tight">
             {product.name}
           </h3>
-          
+
           {product.specs && product.specs.length > 0 && (
-            <div className="mb-3">
+            <div className="mb-2">
               <div className="flex flex-wrap gap-1">
                 {product.specs.slice(0, 2).map((spec, index) => (
                   <span key={index} className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-1 rounded-full">
@@ -96,11 +97,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           )}
         </div>
-        
+
         <div className="flex items-center justify-between mt-auto">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
-              <span className="text-lg font-lato font-bold text-gray-900 dark:text-white">
+              <span className="text-base font-lato font-bold text-gray-900 dark:text-white">
                 {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
@@ -113,12 +114,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.category}
             </span>
           </div>
-          
+
           {/* Botón agregar al carrito */}
           <button
             onClick={handleAddToCart}
             disabled={isInCart(product.id)}
-            className={`${
+            className={`$
               isInCart(product.id) 
                 ? 'bg-green-500 text-white cursor-not-allowed' 
                 : 'bg-yellow-500 hover:bg-yellow-600 text-white hover:scale-105'

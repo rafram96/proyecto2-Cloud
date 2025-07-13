@@ -219,8 +219,15 @@ const Myorders: React.FC = () => {
                         key={idx}
                         className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
                       >
-                        <div className="w-full h-24 bg-gray-200 dark:bg-gray-600 rounded-lg mb-3 flex items-center justify-center">
-                          <Package className="w-8 h-8 text-gray-400" />
+                        <div className="w-full h-24 bg-gray-200 dark:bg-gray-600 rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                          <img
+                            src={producto.imagen_url || '/placeholder.png'}
+                            alt={producto.nombre}
+                            className="max-h-20 max-w-full object-contain"
+                            onError={e => {
+                              e.currentTarget.src = '/placeholder.png';
+                            }}
+                          />
                         </div>
                         <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                           {producto.nombre}
