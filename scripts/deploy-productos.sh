@@ -1,81 +1,111 @@
 #!/bin/bash
 set -e
 
-TIMESTAMP=$1
+# ====================
+# CONFIGURACIÓN
+# ====================
+STAGE="dev"  # valor por defecto
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_DIR=~/logs
-echo "🚀 Desplegando api-productos..." | tee -a "$LOG_FILE"
-
-# Crear archivo temporal para capturar solo el output del deploy actual
-DEPLOY_OUTPUT=$(mktemp)
-
-if sls deploy > "$DEPLOY_OUTPUT" 2>&1; then
-  # Añadir output del deploy al log principal
-  cat "$DEPLOY_OUTPUT" >> "$LOG_FILE"
-  
-  echo "✅ api-productos desplegado correctamente" | tee -a "$LOG_FILE"
-
-  echo -e "\n🌐 Endpoints de api-productos:"
-  # Extraer endpoints solo del deploy actual
-  grep -E "https://.*\.amazonaws\.com" "$DEPLOY_OUTPUT" | sort -u
-  
-  # Limpiar archivo temporal
-  rm -f "$DEPLOY_OUTPUT"
-else
-  # Si falla, mostrar el error y añadir al log
-  cat "$DEPLOY_OUTPUT" >> "$LOG_FILE"
-  echo "❌ Fallo al desplegar api-productos, revisa el log $LOG_FILE" | tee -a "$LOG_FILE"
-  rm -f "$DEPLOY_OUTPUT"
-  exit 1
-fi$LOG_DIR/api_productos_$TIMESTAMP.log"
 mkdir -p "$LOG_DIR"
-
+LOG_FILE="$LOG_DIR/api_productos_${STAGE}_$TIMESTAMP.log"
 API_DIR=~/proyecto2-Cloud/backend/api-productos
+LAYER_DIR="$API_DIR/layers/dependencies/nodejs"
 
+# ====================
+# FUNCIÓN DE AYUDA
+# ====================
+usage() {
+    echo "Uso: $0 [-s stage]"
+    echo "  -s, --stage    Stage a usar (dev | test | prod). Default: dev"
+    echo "  -h, --help     Muestra esta ayuda"
+    exit 1
+}
+
+# ====================
+# PARSE DE ARGUMENTOS
+# ====================
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -s|--stage)
+      STAGE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      echo "❌ Argumento desconocido: $1"
+      usage
+      ;;
+  esac
+done
+
+# Validar stage
+if [[ ! "$STAGE" =~ ^(dev|test|prod)$ ]]; then
+  echo "❌ Stage inválido: $STAGE. Usa: dev, test o prod"
+  exit 1
+fi
+
+# ====================
+# INICIO DEL SCRIPT
+# ====================
+echo "🚀 Desplegando api-productos en stage: $STAGE" | tee -a "$LOG_FILE"
+
+# Validar directorio
 if [ ! -d "$API_DIR" ]; then
-  echo "❌ api-productos no encontrado en $API_DIR"
+  echo "❌ api-productos no encontrado en $API_DIR" | tee -a "$LOG_FILE"
   exit 1
 fi
 
 cd "$API_DIR"
 
-echo "🗑️ Eliminando api-productos..." | tee -a "$LOG_FILE"
-sls remove >> "$LOG_FILE" 2>&1 || echo "⚠️ Fallo al eliminar api-productos (posiblemente ya no existe)" | tee -a "$LOG_FILE"
+# ====================
+# ELIMINAR STACK EXISTENTE
+# ====================
+echo "🗑️ Eliminando stack anterior..." | tee -a "$LOG_FILE"
+sls remove --stage "$STAGE" >> "$LOG_FILE" 2>&1 || echo "⚠️ Fallo al eliminar (posiblemente ya estaba limpio)" | tee -a "$LOG_FILE"
 
-echo "� Verificando y reinstalando dependencias del layer..." | tee -a "$LOG_FILE"
-LAYER_DIR="$API_DIR/layers/dependencies/nodejs"
-
+# ====================
+# VERIFICAR/INSTALAR LAYER
+# ====================
 if [ -d "$LAYER_DIR" ]; then
+  echo "📦 Verificando dependencias del layer..." | tee -a "$LOG_FILE"
   cd "$LAYER_DIR"
   
-  echo "📦 Verificando si jsonwebtoken existe..." | tee -a "$LOG_FILE"
   if [ ! -d "node_modules/jsonwebtoken" ]; then
-    echo "❌ jsonwebtoken no encontrado, reinstalando dependencias..." | tee -a "$LOG_FILE"
-    rm -rf node_modules package-lock.json 2>/dev/null || true
+    echo "⚠️ jsonwebtoken no encontrado. Reinstalando dependencias..." | tee -a "$LOG_FILE"
+    rm -rf node_modules package-lock.json
     npm install --production >> "$LOG_FILE" 2>&1
-  else
-    echo "✅ jsonwebtoken encontrado" | tee -a "$LOG_FILE"
   fi
   
-  echo "🔍 Verificando instalación de jsonwebtoken..." | tee -a "$LOG_FILE"
   if [ -d "node_modules/jsonwebtoken" ]; then
     echo "✅ jsonwebtoken correctamente instalado" | tee -a "$LOG_FILE"
   else
-    echo "❌ Error: jsonwebtoken no se pudo instalar" | tee -a "$LOG_FILE"
+    echo "❌ No se pudo instalar jsonwebtoken" | tee -a "$LOG_FILE"
     exit 1
   fi
-  
   cd "$API_DIR"
 else
-  echo "⚠️ Directorio del layer no encontrado: $LAYER_DIR" | tee -a "$LOG_FILE"
+  echo "⚠️ Directorio de layer no encontrado: $LAYER_DIR" | tee -a "$LOG_FILE"
 fi
 
-echo "�🚀 Desplegando api-productos..." | tee -a "$LOG_FILE"
-if sls deploy >> "$LOG_FILE" 2>&1; then
-  echo "✅ api-productos desplegado correctamente" | tee -a "$LOG_FILE"
+# ====================
+# DEPLOY NUEVO
+# ====================
+echo "🚀 Realizando nuevo deploy..." | tee -a "$LOG_FILE"
+DEPLOY_OUTPUT=$(mktemp)
 
-  echo -e "\n🌐 Endpoints de api-productos:"
-  grep -E "https://.*\.amazonaws\.com" "$LOG_FILE"
+if sls deploy --stage "$STAGE" > "$DEPLOY_OUTPUT" 2>&1; then
+  cat "$DEPLOY_OUTPUT" >> "$LOG_FILE"
+  echo "✅ Deploy exitoso para api-productos ($STAGE)" | tee -a "$LOG_FILE"
+  echo "📋 Log: $LOG_FILE"
+  echo -e "\n🌐 Endpoints desplegados:"
+  grep -E "https://.*\.amazonaws\.com" "$DEPLOY_OUTPUT" | sort -u
+  rm -f "$DEPLOY_OUTPUT"
 else
-  echo "❌ Fallo al desplegar api-productos, revisa el log $LOG_FILE" | tee -a "$LOG_FILE"
+  cat "$DEPLOY_OUTPUT" >> "$LOG_FILE"
+  echo "❌ Fallo en el deploy. Ver log: $LOG_FILE" | tee -a "$LOG_FILE"
+  rm -f "$DEPLOY_OUTPUT"
   exit 1
 fi
