@@ -12,6 +12,7 @@ interface ProductCardProps {
     image: string;
     category: string;
     specs?: string[];
+    description?: string;
   };
 }
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
@@ -30,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       tenant_id: 'TADASHI', // Usar el tenant actual
       codigo: product.id,
       nombre: product.name,
-      descripcion: `Producto ${product.name}`, // Descripción por defecto
+      descripcion: product.description || '', // Usar descripción real o vacía
       precio: product.price,
       categoria: product.category,
       stock: 10, // Stock por defecto

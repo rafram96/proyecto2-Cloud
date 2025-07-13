@@ -46,15 +46,38 @@ export async function requestCompras<T>(
     ...(options.headers as Record<string, string>),
   };
 
+  console.log(`📡 Request to ${COMPRAS_BASE_URL}${path} with headers:`, headers);
+
   const response = await fetch(`${COMPRAS_BASE_URL}${path}`, {
     ...options,
     headers,
   });
   
-  const payload = await response.json().catch(() => ({}));
+  console.log(`📡 Response from ${COMPRAS_BASE_URL}${path} - Status: ${response.status}`);
+  
+  let payload;
+  try {
+    payload = await response.json();
+    console.log(`📦 Response payload:`, payload);
+  } catch (jsonError) {
+    console.error('❌ Error parsing JSON response:', jsonError);
+    
+    // Intentar obtener el texto de la respuesta para diagnóstico
+    try {
+      const responseText = await response.text();
+      console.error('📄 Response as text:', responseText);
+      payload = { error: `Error parsing JSON: ${responseText}` };
+    } catch (textError) {
+      console.error('❌ Error reading response text:', textError);
+      payload = { error: 'Error parsing response' };
+    }
+  }
+  
   if (!response.ok) {
+    console.error(`❌ Request failed: ${response.status} - ${response.statusText}`);
     throw payload;
   }
+  
   return payload;
 }
 

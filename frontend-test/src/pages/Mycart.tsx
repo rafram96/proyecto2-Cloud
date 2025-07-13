@@ -153,51 +153,67 @@ const Cart: React.FC = () => {
           `TARJETA (****${cardFormData.cardNumber.slice(-4)})`
       };
 
-      console.log('🛒 Procesando checkout con:', compraData);
+      // Log detallado del body que se enviará
+      console.log('🛒 [Mycart] Body enviado a comprasService:', JSON.stringify(compraData, null, 2));
       setCheckoutStep('Creando orden...');
-      
+
       // Crear la compra usando el servicio
       const response = await comprasService.crearCompra(compraData);
-      
+
+      // Log detallado de la respuesta completa
+      console.log('📦 [Mycart] Respuesta completa de comprasService:', response);
+
       if (response.success) {
         setCheckoutStep('Actualizando inventario...');
-        
+
         // Simular tiempo de ingesta/actualización en tiempo real
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         setCheckoutStep('Sincronizando datos...');
-        
+
         // Aquí es donde ocurre la ingesta en tiempo real:
         // 1. La API de compras guarda en DynamoDB
         // 2. DynamoDB Streams triggea la Lambda
         // 3. Lambda actualiza ElasticSearch
         // 4. Stock se actualiza automáticamente
-        
+
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         console.log('✅ Compra creada exitosamente:', response.data);
         console.log('🔄 Ingesta en tiempo real completada');
-        
+
         setCheckoutStep('¡Completado!');
-        
+
         const tarjetaInfo = selectedCard ? 
           `Tarjeta: ${selectedCard.cardNumber}` : 
           `Tarjeta: ****${cardFormData.cardNumber.slice(-4)}`;
-        
+
         alert(`¡Orden procesada exitosamente! 
 ID: ${response.data?.compra_id}
 Total: PEN ${formatPrice(response.data?.total || 0)}
 ${tarjetaInfo}
 Stock actualizado en tiempo real`);
-        
+
         clearCart();
       } else {
         console.error('❌ Error en la respuesta:', response.error);
-        alert(response.error || 'Error al procesar la orden. Intenta nuevamente.');
+        alert(`Error al procesar la orden: ${response.error || 'Error desconocido'}`);
       }
     } catch (error) {
       console.error('💥 Error en checkout:', error);
-      alert('Error al procesar la orden. Intenta nuevamente.');
+
+      // Proporcionar más detalles del error
+      let errorMessage = 'Error al procesar la orden.';
+
+      if (error && typeof error === 'object') {
+        if ('error' in error && typeof error.error === 'string') {
+          errorMessage = `Error del servidor: ${error.error}`;
+        } else if ('message' in error && typeof error.message === 'string') {
+          errorMessage = `Error: ${error.message}`;
+        }
+      }
+
+      alert(`${errorMessage}\n\nRevisa la consola para más detalles o intenta nuevamente.`);
     } finally {
       setIsCheckingOut(false);
       setCheckoutStep('');
@@ -220,92 +236,110 @@ Stock actualizado en tiempo real`);
                 You have a total of {getItemCount()} {getItemCount() === 1 ? 'product' : 'products'}.
               </p>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {items.map((item, index) => (
-                  <div key={`${item.product.codigo}-${index}`} className="flex items-center space-x-4 relative">
+                  <div key={`${item.product.codigo}-${index}`} className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200 dark:border-gray-700 p-6 relative">
+                    <div className="flex items-center space-x-6">
 
-                    {/* Imagen del producto */}
-                    <div className="flex-shrink-0">
-                      <div className="flex items-center justify-center">
-                        {item.product.imagen_url ? (
-                          <img
-                            src={item.product.imagen_url}
-                            alt={item.product.nombre}
-                            className="w-40 h-40 object-contain"
-                          />
-                        ) : (
-                          <div className="w-40 h-40 bg-gray-200 dark:bg-gray-600 flex items-center justify-center rounded-lg">
-                            <span className="text-gray-400 text-sm">Sin imagen</span>
+                      {/* Imagen del producto */}
+                      <div className="flex-shrink-0">
+                        <div className="flex items-center justify-center">
+                          {item.product.imagen_url ? (
+                            <img
+                              src={item.product.imagen_url}
+                              alt={item.product.nombre}
+                              className="w-32 h-32 object-contain rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 flex items-center justify-center rounded-lg">
+                              <span className="text-gray-400 text-sm">Sin imagen</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Información del producto */}
+                      <div className="flex-1">
+                        <div className="mb-4">
+                          <h3 className="font-lato font-bold text-gray-900 dark:text-white text-xl mb-3">
+                            {item.product.nombre}
+                          </h3>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
+                            {item.product.descripcion && (
+                              <div className="font-lato text-gray-600 dark:text-gray-300">
+                                {item.product.descripcion}
+                              </div>
+                            )}
+                            <div className="flex items-center space-x-4">
+                              <span className="font-lato font-semibold text-lg text-gray-900 dark:text-white">
+                                PEN {formatPrice(typeof item.product.precio === 'string' ? parseFloat(item.product.precio) : item.product.precio)}
+                              </span>
+                            </div>
+                            <div className="font-lato">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                item.product.stock && item.product.stock > 10 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                                  : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
+                              }`}>
+                                Stock: {item.product.stock || 0} unidades
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Información del producto */}
-                    <div className="flex-1 pr-8">
-                      <h3 className="font-lato font-bold text-black dark:text-white text-sm mb-4">
-                        {item.product.nombre}
-                      </h3>
-                      <div className="text-xs text-gray-700 dark:text-gray-400 space-y-1">
-                        <div className="font-lato text-gray-600 dark:text-gray-300">
-                          {item.product.descripcion || 'Sin descripción'}
                         </div>
-                        <div className="font-lato font-semibold text-gray-800 dark:text-gray-200">
-                          PEN {formatPrice(typeof item.product.precio === 'string' ? parseFloat(item.product.precio) : item.product.precio)}
-                        </div>
-                        <div className="font-lato text-gray-500 dark:text-gray-400">SKU {item.product.codigo}</div>
-                        <div className="font-lato">
-                          <span className={`text-xs font-medium ${item.product.stock && item.product.stock > 10 ? 'text-green-700 dark:text-green-400' : 'text-orange-700 dark:text-orange-400'}`}>
-                            Stock: {item.product.stock || 0} unidades
-                          </span>
+
+                        {/* Controles de cantidad */}
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Cantidad:</span>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleQuantityChange(item.product.codigo, -1)}
+                              disabled={item.quantity <= 1}
+                              className="w-8 h-8 flex items-center justify-center bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900 dark:hover:bg-yellow-800 border border-yellow-200 dark:border-yellow-700 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              <Minus className="w-4 h-4 text-yellow-600 dark:text-yellow-300" />
+                            </button>
+                            <span className="w-12 text-center font-lato text-lg font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 rounded-lg py-1">
+                              {item.quantity}
+                            </span>
+                            <button
+                              onClick={() => handleQuantityChange(item.product.codigo, 1)}
+                              disabled={item.quantity >= (item.product.stock || 0)}
+                              className="w-8 h-8 flex items-center justify-center bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900 dark:hover:bg-yellow-800 border border-yellow-200 dark:border-yellow-700 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                            >
+                              <Plus className="w-4 h-4 text-yellow-600 dark:text-yellow-300" />
+                            </button>
+                          </div>
+                          <div className="ml-auto">
+                            <span className="text-lg font-bold text-gray-900 dark:text-white">
+                              Subtotal: PEN {formatPrice((typeof item.product.precio === 'string' ? parseFloat(item.product.precio) : item.product.precio) * item.quantity)}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Controles de cantidad */}
-                      <div className="flex items-center font-jaldi space-x-2 mt-4">
-                        <button
-                          onClick={() => handleQuantityChange(item.product.codigo, -1)}
-                          disabled={item.quantity <= 1}
-                          className="w-7 h-7 flex items-center justify-center bg-dorado4 hover:bg-dorado3 border border-dorado3 dark:bg-dorado1 dark:hover:bg-dorado2 dark:border-dorado2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                        >
-                          <Minus className="w-4 h-4 text-gray-800 dark:text-black" />
-                        </button>
-                        <span className="w-8 text-center font-jaldi text-[16px] font-semibold text-gray-800 dark:text-white">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => handleQuantityChange(item.product.codigo, 1)}
-                          disabled={item.quantity >= (item.product.stock || 0)}
-                          className="w-7 h-7 flex items-center justify-center bg-dorado4 hover:bg-dorado3 border border-dorado3 dark:bg-dorado1 dark:hover:bg-dorado2 dark:border-dorado2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                        >
-                          <Plus className="w-4 h-4 text-gray-800 dark:text-black" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Botón de eliminar */}
-                    <button
-                      onClick={() => handleDeleteItem(item.product.codigo)}
-                      className="absolute top-3 right-2 w-8 h-8 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900 rounded-full border border-gray-300 dark:border-gray-600 transition-colors duration-200"
-                      title="Eliminar producto"
-                    >
-                      <svg 
-                        className="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400" 
-                        width="24" 
-                        height="24" 
-                        viewBox="0 0 24 24" 
-                        strokeWidth="2" 
-                        stroke="currentColor" 
-                        fill="none" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
+                      {/* Botón de eliminar */}
+                      <button
+                        onClick={() => handleDeleteItem(item.product.codigo)}
+                        className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900 rounded-full border border-gray-300 dark:border-gray-600 transition-colors duration-200 group"
+                        title="Eliminar producto"
                       >
-                        <path stroke="none" d="M0 0h24v24H0z"/>
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    </button>
-
+                        <svg 
+                          className="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors duration-200" 
+                          width="24" 
+                          height="24" 
+                          viewBox="0 0 24 24" 
+                          strokeWidth="2" 
+                          stroke="currentColor" 
+                          fill="none" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                        >
+                          <path stroke="none" d="M0 0h24v24H0z"/>
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
 

@@ -16,6 +16,7 @@ export interface ProductCardFormat {
   image: string;
   category: string;
   specs?: string[];
+  description?: string;
 }
 
 // Función para convertir el producto de la API al formato esperado por ProductCard
@@ -26,6 +27,7 @@ const convertToProductCardFormat = (product: Product): ProductCardFormat => ({
   image: product.imagen_url || '/placeholder-image.jpg',
   category: product.categoria,
   specs: product.tags || [],
+  description: product.descripcion,
 });
 
 const Search: React.FC = () => {

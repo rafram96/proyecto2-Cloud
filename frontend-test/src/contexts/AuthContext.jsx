@@ -96,24 +96,27 @@ export function AuthProvider({ children }) {
         localStorage.setItem('user', JSON.stringify(userMapped));
         // Guardar el tenantId por separado para las llamadas a la API
         localStorage.setItem('tenantId', result.data.user.tenant_id);
+        // Compatibilidad: guardar también como 'tenant_id'
+        localStorage.setItem('tenant_id', result.data.user.tenant_id);
         setIsLoading(false);
         return result;
       } else {
         // Si falla el login real, intentar modo mock para testing
         console.warn('⚠️ Login falló, activando modo testing con datos mock');
-        
+
         const mockUser = {
           userId: `user_${credentials.tenant_id}`,
           email: credentials.email,
           tenantId: credentials.tenant_id,
           nombre: `Usuario de ${credentials.tenant_id}`
         };
-        
+
         setUser(mockUser);
         localStorage.setItem('user', JSON.stringify(mockUser));
         localStorage.setItem('tenantId', credentials.tenant_id);
+        localStorage.setItem('tenant_id', credentials.tenant_id);
         localStorage.setItem('token', `mock_token_${credentials.tenant_id}_${Date.now()}`);
-        
+
         setIsLoading(false);
         return { 
           success: true, 

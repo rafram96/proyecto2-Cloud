@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Configuración de DynamoDB
 dynamodb = boto3.resource('dynamodb')
-COMPRAS_TABLE = os.environ.get('COMPRAS_TABLE', 'compras-dev')
+COMPRAS_TABLE = os.environ.get('COMPRAS_TABLE', 'p_compras-dev')
 
 def get_compras_table():
     """Obtiene la tabla de compras"""
