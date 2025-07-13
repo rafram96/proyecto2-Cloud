@@ -28,7 +28,7 @@ const MyProducts: React.FC = () => {
 
   // Estados para paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 6; // Cambié a 9 para un grid 3x3
+  const productsPerPage = 6; // Cambié a 6 para un grid 2x3
 
   // Estado del formulario
   const [formData, setFormData] = useState({
