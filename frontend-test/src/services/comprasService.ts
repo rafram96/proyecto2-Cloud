@@ -96,10 +96,17 @@ class ComprasService {
         console.error('❌ [comprasService] Error en respuesta exitosa:', response);
         throw new Error(response.error || 'Error al crear la compra');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('💥 [comprasService] Error en crearCompra:', error);
 
-      // Log más detallado del error
+      // Si el error viene del requestCompras y tiene estructura de respuesta del backend
+      if (error && typeof error === 'object' && error.error) {
+        console.log('🔄 [comprasService] Error del backend:', error.error);
+        // Propagar el error tal como viene del backend para mantener el mensaje específico
+        throw error;
+      }
+
+      // Log más detallado del error si es una Response
       if (error instanceof Response) {
         console.error('🌐 [comprasService] Response status:', error.status);
         console.error('🌐 [comprasService] Response statusText:', error.statusText);
@@ -111,6 +118,7 @@ class ComprasService {
         }
       }
 
+      // Para otros tipos de errores, devolver estructura consistente
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Error desconocido al crear la compra'

@@ -73,6 +73,13 @@ export const useCart = (): UseCartReturn => {
     console.log(`🛒 [${timestamp}] useCart - addToCart llamado con:`, { product, quantity });
     console.log(`🛒 [${timestamp}] useCart - items actuales antes de agregar:`, items);
     
+    // ✅ Validar stock antes de agregar
+    if (product.stock <= 0) {
+      console.log(`❌ [${timestamp}] useCart - producto sin stock:`, product.codigo);
+      alert(`❌ ${product.nombre} está agotado. Stock disponible: ${product.stock}`);
+      return;
+    }
+    
     setItems(currentItems => {
       console.log(`🛒 [${timestamp}] useCart - currentItems en setState:`, currentItems);
       
@@ -80,15 +87,32 @@ export const useCart = (): UseCartReturn => {
       const existingItemIndex = currentItems.findIndex(item => item.product.codigo === product.codigo);
       
       if (existingItemIndex !== -1) {
+        const existingItem = currentItems[existingItemIndex];
+        const newQuantity = existingItem.quantity + quantity;
+        
+        // ✅ Validar que no exceda el stock disponible
+        if (newQuantity > product.stock) {
+          console.log(`❌ [${timestamp}] useCart - cantidad excede stock disponible:`, { newQuantity, stock: product.stock });
+          alert(`❌ No puedes agregar más unidades. Stock disponible: ${product.stock}, tienes ${existingItem.quantity} en el carrito`);
+          return currentItems; // No modificar el carrito
+        }
+        
         // Si existe, actualizar cantidad
         const updatedItems = currentItems.map(item =>
           item.product.codigo === product.codigo
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: newQuantity }
             : item
         );
         console.log(`🛒 [${timestamp}] useCart - actualizando producto existente:`, updatedItems);
         return updatedItems;
       } else {
+        // ✅ Validar stock para producto nuevo
+        if (quantity > product.stock) {
+          console.log(`❌ [${timestamp}] useCart - cantidad inicial excede stock:`, { quantity, stock: product.stock });
+          alert(`❌ No puedes agregar ${quantity} unidades. Stock disponible: ${product.stock}`);
+          return currentItems; // No modificar el carrito
+        }
+        
         // Si es nuevo, agregarlo
         const newItem: CartItem = { product, quantity };
         const newItems = [...currentItems, newItem];

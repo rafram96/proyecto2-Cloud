@@ -50,6 +50,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const addToCart = (product: any, quantity: number) => {
     console.log('🛒 Agregando al carrito:', { product, quantity });
     
+    // ✅ Validar stock antes de agregar
+    if (product.stock <= 0) {
+      console.log(`❌ Producto sin stock:`, product.codigo);
+      alert(`❌ ${product.nombre} está agotado. Stock disponible: ${product.stock}`);
+      return;
+    }
+    
     const existingItemIndex = items.findIndex(item => item.id === product.codigo);
     
     if (existingItemIndex > -1) {
@@ -57,15 +64,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedItems = [...items];
       const newQuantity = updatedItems[existingItemIndex].quantity + quantity;
       
-      // Verificar stock disponible
+      // ✅ Verificar que no exceda el stock disponible
       if (newQuantity <= product.stock) {
         updatedItems[existingItemIndex].quantity = newQuantity;
         setItems(updatedItems);
         console.log('✅ Cantidad actualizada en carrito');
       } else {
-        alert(`❌ Stock insuficiente. Disponible: ${product.stock}`);
+        console.log(`❌ Cantidad excede stock disponible:`, { newQuantity, stock: product.stock });
+        alert(`❌ No puedes agregar más unidades. Stock disponible: ${product.stock}, tienes ${updatedItems[existingItemIndex].quantity} en el carrito`);
       }
     } else {
+      // ✅ Validar stock para producto nuevo
+      if (quantity > product.stock) {
+        console.log(`❌ Cantidad inicial excede stock:`, { quantity, stock: product.stock });
+        alert(`❌ No puedes agregar ${quantity} unidades. Stock disponible: ${product.stock}`);
+        return;
+      }
+      
       // Agregar nuevo item
       const newItem: CartItem = {
         id: product.codigo,
@@ -95,11 +110,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedItems = items.map(item => {
       if (item.id === productId) {
+        // ✅ Validar stock antes de actualizar cantidad
         if (quantity <= item.stock) {
           return { ...item, quantity };
         } else {
-          alert(`❌ Stock insuficiente. Disponible: ${item.stock}`);
-          return item;
+          console.log(`❌ Cantidad excede stock disponible:`, { quantity, stock: item.stock });
+          alert(`❌ Stock insuficiente. Disponible: ${item.stock}, intentaste poner: ${quantity}`);
+          return item; // Mantener cantidad actual
         }
       }
       return item;

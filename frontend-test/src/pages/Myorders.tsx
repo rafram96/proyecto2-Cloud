@@ -77,13 +77,20 @@ const Myorders: React.FC = () => {
     }
   };
 
-  // Filtrar compras por término de búsqueda
-  const filteredCompras = compras.filter(compra => 
-    !filter || 
-    compra.compra_id.toLowerCase().includes(filter.toLowerCase()) ||
-    compra.estado.toLowerCase().includes(filter.toLowerCase()) ||
-    compra.productos.some(p => p.nombre.toLowerCase().includes(filter.toLowerCase()))
-  );
+  // Filtrar y ordenar compras por término de búsqueda y fecha
+  const filteredCompras = compras
+    .filter(compra => 
+      !filter || 
+      compra.compra_id.toLowerCase().includes(filter.toLowerCase()) ||
+      compra.estado.toLowerCase().includes(filter.toLowerCase()) ||
+      compra.productos.some(p => p.nombre.toLowerCase().includes(filter.toLowerCase()))
+    )
+    .sort((a, b) => {
+      // Ordenar por fecha de creación (más recientes primero)
+      const dateA = new Date(a.fecha_compra).getTime();
+      const dateB = new Date(b.fecha_compra).getTime();
+      return dateB - dateA;
+    });
 
   if (loading && compras.length === 0) {
     return (
@@ -143,18 +150,26 @@ const Myorders: React.FC = () => {
         <h1 className="font-koulen text-gray-900 dark:text-gray-100 text-[40px] mb-12 drop-shadow-sm">MIS ÓRDENES</h1>
 
         {/* Barra de filtrado */}
-        <SearchBar 
-          placeholder="Filtrar órdenes por ID, estado o producto..." 
-          onSearch={setFilter} 
-        />
+        <div className="mb-6">
+          <SearchBar 
+            placeholder="Filtrar órdenes por ID, estado o producto..." 
+            onSearch={setFilter} 
+          />
+          
+          {/* Indicador de ordenamiento */}
+          <div className="mt-3 flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <Calendar className="w-4 h-4 mr-1" />
+            <span>Ordenadas por fecha (más recientes primero)</span>
+          </div>
+        </div>
 
         {filteredCompras.length === 0 ? (
           <div className="text-center py-12">
-            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
+            <Package className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">
               {filter ? 'No se encontraron órdenes' : 'No tienes órdenes'}
             </h3>
-            <p className="text-gray-500 dark:text-gray-500">
+            <p className="text-gray-500 dark:text-gray-400">
               {filter ? 'Intenta con un filtro diferente' : 'Cuando realices compras aparecerán aquí'}
             </p>
           </div>
@@ -223,13 +238,12 @@ const Myorders: React.FC = () => {
                           <img
                             src={producto.imagen_url || '/placeholder.png'}
                             alt={producto.nombre}
-                            className={`w-full h-full object-contain transition-transform duration-300 ${(!producto.imagen_url || producto.imagen_url === '/placeholder.png') ? 'opacity-60 grayscale' : ''}`}
+                            className="w-full h-full object-contain transition-transform duration-300"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               if (target.src !== window.location.origin + '/placeholder.png') {
-                                target.onerror = null; // Previene loops infinitos
+                                target.onerror = null;
                                 target.src = '/placeholder.png';
-                                target.classList.add('opacity-60', 'grayscale');
                               }
                             }}
                           />
@@ -237,9 +251,6 @@ const Myorders: React.FC = () => {
                         <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
                           {producto.nombre}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                          Código: {producto.codigo}
-                        </p>
                         <div className="flex justify-between items-center">
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             Cant: {producto.cantidad}
@@ -269,7 +280,7 @@ const Myorders: React.FC = () => {
                 <button
                   onClick={loadMore}
                   disabled={loading}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                  className="px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-medium"
                 >
                   {loading ? 'Cargando...' : 'Cargar más órdenes'}
                 </button>

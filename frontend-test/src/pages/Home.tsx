@@ -39,6 +39,11 @@ const convertToProductCardFormat = (product: Product) => {
     price: product.precio,
     image: imageUrl,
     category: product.categoria,
+    stock: product.stock, // ✅ Usar el stock real del producto
+    description: product.descripcion,
+    specs: product.tags,
+    // Pasar el producto completo para referencia
+    fullProduct: product
   };
 };
 

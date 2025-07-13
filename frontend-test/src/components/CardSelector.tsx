@@ -15,7 +15,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   onAddNewCard
 }) => {
   const getCardIcon = (cardType: SavedCard['cardType']) => {
-    const icons = {
+    const icons: Record<string, string> = {
       visa: '💳',
       mastercard: '💳', 
       amex: '💳',
@@ -25,7 +25,7 @@ const CardSelector: React.FC<CardSelectorProps> = ({
   };
 
   const getCardColor = (cardType: SavedCard['cardType']) => {
-    const colors = {
+    const colors: Record<string, string> = {
       visa: 'bg-blue-100 dark:bg-blue-900',
       mastercard: 'bg-red-100 dark:bg-red-900',
       amex: 'bg-green-100 dark:bg-green-900',

@@ -15,8 +15,10 @@ export interface ProductCardFormat {
   discount?: number;
   image: string;
   category: string;
+  stock: number; // ✅ Agregar stock
   specs?: string[];
   description?: string;
+  fullProduct?: Product; // ✅ Producto completo para referencia
 }
 
 // Función para convertir el producto de la API al formato esperado por ProductCard
@@ -26,8 +28,10 @@ const convertToProductCardFormat = (product: Product): ProductCardFormat => ({
   price: product.precio,
   image: product.imagen_url || '/placeholder-image.jpg',
   category: product.categoria,
+  stock: product.stock, // ✅ Incluir el stock real
   specs: product.tags || [],
   description: product.descripcion,
+  fullProduct: product, // ✅ Pasar el producto completo
 });
 
 const Search: React.FC = () => {

@@ -71,10 +71,10 @@ const Cart: React.FC = () => {
         return; // No permitir menos de 1
       }
       
-      // Verificar stock disponible
+      // ✅ Verificar stock disponible (usar el stock real del producto)
       const stockDisponible = item.product.stock || 0;
       if (newQuantity > stockDisponible) {
-        alert(`Solo hay ${stockDisponible} unidades disponibles en stock`);
+        alert(`❌ Solo hay ${stockDisponible} unidades disponibles en stock. Tienes ${item.quantity} en el carrito.`);
         return;
       }
       
@@ -197,23 +197,40 @@ Stock actualizado en tiempo real`);
         clearCart();
       } else {
         console.error('❌ Error en la respuesta:', response.error);
-        alert(`Error al procesar la orden: ${response.error || 'Error desconocido'}`);
+        
+        // Mostrar el error específico del backend
+        const errorMessage = response.error || 'Error desconocido';
+        
+        // Si es un error de stock, mostrar alerta específica
+        if (errorMessage.includes('Stock insuficiente')) {
+          alert(`⚠️ ${errorMessage}\n\nPor favor, ajusta las cantidades en tu carrito y vuelve a intentar.`);
+        } else {
+          alert(`❌ Error al procesar la orden: ${errorMessage}`);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('💥 Error en checkout:', error);
 
-      // Proporcionar más detalles del error
+      // Manejar el error correctamente dependiendo de su estructura
       let errorMessage = 'Error al procesar la orden.';
 
       if (error && typeof error === 'object') {
-        if ('error' in error && typeof error.error === 'string') {
-          errorMessage = `Error del servidor: ${error.error}`;
-        } else if ('message' in error && typeof error.message === 'string') {
-          errorMessage = `Error: ${error.message}`;
+        // Si el error viene del backend con la estructura {success: false, error: "mensaje"}
+        if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
+        } 
+        // Si es un error con mensaje directo
+        else if (error.message && typeof error.message === 'string') {
+          errorMessage = error.message;
         }
       }
 
-      alert(`${errorMessage}\n\nRevisa la consola para más detalles o intenta nuevamente.`);
+      // Mostrar alerta específica según el tipo de error
+      if (errorMessage.includes('Stock insuficiente')) {
+        alert(`⚠️ ${errorMessage}\n\nPor favor, ajusta las cantidades en tu carrito y vuelve a intentar.`);
+      } else {
+        alert(`❌ ${errorMessage}\n\nRevisa la consola para más detalles o intenta nuevamente.`);
+      }
     } finally {
       setIsCheckingOut(false);
       setCheckoutStep('');
@@ -238,7 +255,19 @@ Stock actualizado en tiempo real`);
 
               <div className="space-y-6">
                 {items.map((item, index) => (
-                  <div key={`${item.product.codigo}-${index}`} className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200 dark:border-gray-700 p-6 relative">
+                  <div key={`${item.product.codigo}-${index}`} className={`bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border p-6 relative ${
+                    (item.product.stock || 0) <= 0 
+                      ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/10' // Sin stock
+                      : 'border-gray-200 dark:border-gray-700' // Con stock
+                  }`}>
+                    
+                    {/* ✅ Advertencia de stock agotado */}
+                    {(item.product.stock || 0) <= 0 && (
+                      <div className="absolute top-2 left-2 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded-full text-xs font-medium z-10">
+                        ⚠️ Sin stock disponible
+                      </div>
+                    )}
+                    
                     <div className="flex items-center space-x-6">
 
                       {/* Imagen del producto */}
@@ -277,11 +306,13 @@ Stock actualizado en tiempo real`);
                             </div>
                             <div className="font-lato">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                item.product.stock && item.product.stock > 10 
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                                  : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300'
+                                (item.product.stock || 0) <= 0
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' // Sin stock
+                                  : (item.product.stock || 0) <= 5 
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' // Poco stock
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' // Stock suficiente
                               }`}>
-                                Stock: {item.product.stock || 0} unidades
+                                {(item.product.stock || 0) <= 0 ? '❌ Agotado' : `✅ Stock: ${item.product.stock} unidades`}
                               </span>
                             </div>
                           </div>
