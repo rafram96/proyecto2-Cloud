@@ -6,7 +6,7 @@ export interface Producto {
   precio_unitario: number;
   cantidad: number;
   subtotal: number;
-  imagen_url?: string; // url de la imagen del producto (opcional)
+  imagen_url?: string;
 }
 
 export interface CompraData {

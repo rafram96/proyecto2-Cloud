@@ -223,9 +223,14 @@ const Myorders: React.FC = () => {
                           <img
                             src={producto.imagen_url || '/placeholder.png'}
                             alt={producto.nombre}
-                            className="max-h-20 max-w-full object-contain"
-                            onError={e => {
-                              e.currentTarget.src = '/placeholder.png';
+                            className={`w-full h-full object-contain transition-transform duration-300 ${(!producto.imagen_url || producto.imagen_url === '/placeholder.png') ? 'opacity-60 grayscale' : ''}`}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              if (target.src !== window.location.origin + '/placeholder.png') {
+                                target.onerror = null; // Previene loops infinitos
+                                target.src = '/placeholder.png';
+                                target.classList.add('opacity-60', 'grayscale');
+                              }
                             }}
                           />
                         </div>
