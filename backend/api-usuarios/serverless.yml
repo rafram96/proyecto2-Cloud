@@ -2,7 +2,7 @@ org: rafaelram
 service: api-usuarios
 
 custom:
-  role_id: 969784661290
+  role_id: 582232142172
   jwtLayerName: jwtLayer
 
 layers:
