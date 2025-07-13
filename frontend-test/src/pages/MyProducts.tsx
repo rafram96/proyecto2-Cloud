@@ -4,6 +4,7 @@ import { productService } from '../services/productService';
 import type { Product } from '../types/product';
 import SearchBar from '../components/SearchBar';
 import { ProductEditModal } from '../components/ProductEditModal';
+import Pagination from '../components/Pagination';
 
 const MyProducts: React.FC = () => {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ const MyProducts: React.FC = () => {
 
   // Estados para paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 6;
+  const productsPerPage = 6; // Cambié a 9 para un grid 3x3
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -49,6 +50,26 @@ const MyProducts: React.FC = () => {
     'Accessories',
     'TV & Monitors'
   ];
+
+  // Estado de búsqueda
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filtrar productos
+  const filteredProducts = products.filter(product => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      product.nombre.toLowerCase().includes(searchLower) ||
+      product.codigo.toLowerCase().includes(searchLower) ||
+      product.categoria.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
   // Cargar productos al iniciar
   useEffect(() => {
@@ -362,12 +383,7 @@ const MyProducts: React.FC = () => {
     console.log('✅ Producto eliminado desde modal, lista recargada');
   };
 
-  // Funciones de paginación
-  const totalPages = Math.ceil((products?.length || 0) / productsPerPage);
-  const startIndex = (currentPage - 1) * productsPerPage;
-  const endIndex = startIndex + productsPerPage;
-  const currentProducts = products?.slice(startIndex, endIndex) || [];
-
+  // Manejadores de paginación
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -375,15 +391,21 @@ const MyProducts: React.FC = () => {
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
-      handlePageChange(currentPage + 1);
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
-      handlePageChange(currentPage - 1);
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset page when search changes
+  }, [searchTerm]);
 
   return (
     <div className="w-full bg-gray-50 dark:bg-gray-900 min-h-screen theme-transition">
@@ -826,6 +848,17 @@ const MyProducts: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </div>
             )}
           </div>
