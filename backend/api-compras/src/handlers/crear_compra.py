@@ -103,9 +103,9 @@ def lambda_handler(event, context):
                     productos_validados.append({
                         'codigo': codigo_producto,
                         'nombre': producto['nombre'],
-                        'precio_unitario': float(precio_unitario),
+                        'precio_unitario': precio_unitario,
                         'cantidad': cantidad,
-                        'subtotal': float(subtotal)
+                        'subtotal': subtotal
                     })
 
                 except ClientError as e:
@@ -126,7 +126,7 @@ def lambda_handler(event, context):
                 'user_id': user_id,
                 'fecha_compra': timestamp,
                 'productos': productos_validados,
-                'total': float(total_compra),
+                'total': total_compra,
                 'direccion_entrega': direccion_entrega,
                 'metodo_pago': metodo_pago,
                 'estado': 'COMPLETADA',
@@ -163,8 +163,14 @@ def lambda_handler(event, context):
                 'message': 'Compra creada exitosamente',
                 'data': {
                     'compra_id': compra_id,
-                    'total': float(total_compra),
-                    'productos': productos_validados,
+                    'total': float(total_compra), 
+                    'productos': [
+                        {
+                            **prod,
+                            'precio_unitario': float(prod['precio_unitario']),
+                            'subtotal': float(prod['subtotal'])
+                        } for prod in productos_validados
+                    ],
                     'estado': 'COMPLETADA',
                     'created_at': timestamp
                 }
