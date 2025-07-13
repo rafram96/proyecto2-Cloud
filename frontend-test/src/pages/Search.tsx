@@ -41,7 +41,7 @@ const Search: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   
-  const productsPerPage = 16;
+  const productsPerPage = 12;
 
   // Cargar productos desde la API
   useEffect(() => {
@@ -165,22 +165,30 @@ const Search: React.FC = () => {
           {/* Contenido principal */}
           <div className="flex-1 min-w-0">
             {/* Resultados info */}
-            <div className="mb-6">
-              <p className="text-gray-600 dark:text-gray-400 text-[16px] font-jaldi">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <p className="text-gray-600 dark:text-gray-400 text-sm font-jaldi">
                 {loading ? 'Cargando productos...' : 
-                 `Mostrando ${(currentPage-1)*productsPerPage+1}-${Math.min(currentPage*productsPerPage, filteredProducts.length)} de ${filteredProducts.length} resultados`}
+                 `Mostrando ${(currentPage-1)*productsPerPage+1}-${Math.min(currentPage*productsPerPage, filteredProducts.length)} de ${filteredProducts.length} productos`}
               </p>
+              {!loading && filteredProducts.length > 0 && (
+                <div className="text-xs text-gray-500 dark:text-gray-500">
+                  Página {currentPage} de {totalPages}
+                </div>
+              )}
             </div>
             
             {/* Grid de productos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
               {loading ? (
                 // Skeleton loading
                 Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-4 animate-pulse shadow-sm">
-                    <div className="bg-gray-300 dark:bg-gray-600 h-48 rounded mb-4"></div>
-                    <div className="bg-gray-300 dark:bg-gray-600 h-4 rounded mb-2"></div>
-                    <div className="bg-gray-300 dark:bg-gray-600 h-4 rounded w-2/3"></div>
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-pulse shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div className="bg-gray-300 dark:bg-gray-600 aspect-square rounded-lg mb-4"></div>
+                    <div className="space-y-2">
+                      <div className="bg-gray-300 dark:bg-gray-600 h-4 rounded w-3/4"></div>
+                      <div className="bg-gray-300 dark:bg-gray-600 h-4 rounded w-1/2"></div>
+                      <div className="bg-gray-300 dark:bg-gray-600 h-6 rounded w-1/3 mt-3"></div>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -192,19 +200,28 @@ const Search: React.FC = () => {
 
             {/* Mensaje si no hay productos */}
             {!loading && filteredProducts.length === 0 && (
-              <div className="text-center py-12">
-                <div className="flex flex-col items-center">
-                  <svg className="w-16 h-16 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <p className="text-gray-500 dark:text-gray-400 text-lg font-jaldi">No se encontraron productos que coincidan con tus criterios.</p>
-                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Intenta ajustar los filtros o la búsqueda.</p>
+              <div className="text-center py-16">
+                <div className="flex flex-col items-center max-w-md mx-auto">
+                  <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No se encontraron productos</h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-center mb-4">
+                    No hay productos que coincidan con tus criterios de búsqueda y filtros.
+                  </p>
+                  <div className="text-sm text-gray-400 dark:text-gray-500 space-y-1">
+                    <p>• Intenta usar palabras clave diferentes</p>
+                    <p>• Revisa los filtros aplicados</p>
+                    <p>• Amplía el rango de precios</p>
+                  </div>
                 </div>
               </div>
             )}
             
             {/* Paginación */}
-            {!loading && paginatedProducts.length > productsPerPage && (
+            {!loading && totalPages > 1 && (
               <div className="mt-8">
                 <Pagination
                   currentPage={currentPage}

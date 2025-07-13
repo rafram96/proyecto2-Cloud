@@ -35,14 +35,31 @@ const Cart: React.FC = () => {
     const cards = cardsService.getSavedCards();
     setSavedCards(cards);
     
-    // Seleccionar tarjeta por defecto
-    const defaultCard = cards.find(card => card.isDefault);
-    if (defaultCard) {
-      setSelectedCard(defaultCard);
-    } else if (cards.length > 0) {
-      setSelectedCard(cards[0]); // Si no hay default, seleccionar la primera
+    // Si no hay tarjetas guardadas, mostrar el formulario automáticamente
+    if (cards.length === 0) {
+      setShowNewCardForm(true);
+      setSelectedCard(null);
+    } else {
+      // Seleccionar tarjeta por defecto
+      const defaultCard = cards.find(card => card.isDefault);
+      if (defaultCard) {
+        setSelectedCard(defaultCard);
+      } else {
+        setSelectedCard(cards[0]); // Si no hay default, seleccionar la primera
+      }
     }
   }, []);
+
+  // Efecto para detectar automáticamente cuando el usuario empieza a llenar nueva tarjeta
+  useEffect(() => {
+    const hasStartedFillingNewCard = cardFormData.name || cardFormData.cardNumber || cardFormData.expiryDate || cardFormData.cvv;
+    
+    // Si empieza a llenar datos y no está en modo nueva tarjeta, activarlo
+    if (hasStartedFillingNewCard && !showNewCardForm && savedCards.length > 0) {
+      setShowNewCardForm(true);
+      setSelectedCard(null); // Deseleccionar cualquier tarjeta guardada
+    }
+  }, [cardFormData, showNewCardForm, savedCards.length]);
 
   const handleQuantityChange = (productCode: string, change: number) => {
     const item = items.find(item => item.product.codigo === productCode);
@@ -76,19 +93,23 @@ const Cart: React.FC = () => {
   const handleCheckout = async () => {
     if (items.length === 0) return;
     
+    // Función para detectar si hay datos de nueva tarjeta válidos
+    const hasNewCardData = cardFormData.name && cardFormData.cardNumber && cardFormData.expiryDate && cardFormData.cvv;
+    
     // Validar que tenga tarjeta seleccionada o datos de nueva tarjeta
-    if (!selectedCard && !showNewCardForm) {
-      alert('Por favor selecciona una tarjeta o agrega una nueva');
+    if (!selectedCard && !hasNewCardData) {
+      alert('Por favor selecciona una tarjeta guardada o completa los datos de una nueva tarjeta');
       return;
     }
 
+    // Si tiene datos de nueva tarjeta pero no está en modo showNewCardForm, activarlo automáticamente
+    if (hasNewCardData && !showNewCardForm) {
+      setShowNewCardForm(true);
+      setSelectedCard(null); // Deseleccionar tarjeta guardada para usar la nueva
+    }
+
     // Si está agregando nueva tarjeta, validar campos
-    if (showNewCardForm) {
-      if (!cardFormData.name || !cardFormData.cardNumber || !cardFormData.expiryDate || !cardFormData.cvv) {
-        alert('Por favor completa todos los campos de la tarjeta');
-        return;
-      }
-      
+    if (hasNewCardData) {
       // Si quiere guardar la tarjeta, guardarla
       if (cardFormData.saveCard) {
         const newCard = cardsService.saveCard({
@@ -405,11 +426,16 @@ Stock actualizado en tiempo real`);
                 {/* Formulario para nueva tarjeta o primera tarjeta */}
                 {(showNewCardForm || savedCards.length === 0) && (
                   <div className="space-y-4">
-                    {savedCards.length === 0 && (
+                    <div className="flex items-center justify-between">
                       <h4 className="text-[16px] font-lato font-bold text-gray-700 dark:text-gray-300">
-                        INFORMACIÓN DE TARJETA
+                        {savedCards.length === 0 ? 'INFORMACIÓN DE TARJETA' : 'NUEVA TARJETA'}
                       </h4>
-                    )}
+                      {savedCards.length > 0 && showNewCardForm && (
+                        <span className="text-sm text-dorado3 dark:text-dorado2">
+                          💳 Agregando nueva tarjeta
+                        </span>
+                      )}
+                    </div>
                     
                     {/* Tarjeta simulada - mantener el diseño original */}
                     <div className="border-4 border-gray-600 dark:border-gray-400 rounded-lg p-[30px] bg-white dark:bg-gray-800">
@@ -495,6 +521,18 @@ Stock actualizado en tiempo real`);
                         Guardar esta tarjeta para futuras compras
                       </label>
                     </div>
+
+                    {/* Indicador de nueva tarjeta */}
+                    {(cardFormData.name || cardFormData.cardNumber || cardFormData.expiryDate || cardFormData.cvv) && (
+                      <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-lato text-green-700 dark:text-green-300">
+                            ✓ Nueva tarjeta detectada - Lista para usar en el checkout
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

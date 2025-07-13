@@ -1,9 +1,9 @@
 export interface SavedCard {
   id: string;
   name: string;
-  cardNumber: string; // Solo últimos 4 dígitos
+  cardNumber: string; // Solo últimos 4 dígitos para display
   expiryDate: string;
-  cardType: 'visa' | 'mastercard' | 'amex' | 'discover';
+  cardType: string; // Cualquier tipo que el usuario quiera
   isDefault: boolean;
 }
 
