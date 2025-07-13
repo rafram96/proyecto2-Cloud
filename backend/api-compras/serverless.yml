@@ -20,11 +20,11 @@ provider:
   iam:
     role: arn:aws:iam::582232142172:role/LabRole
   environment:
-  COMPRAS_TABLE: p_compras-${self:provider.stage}
-  PRODUCTOS_TABLE: p_productos-${self:provider.stage}
-  JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
-  STAGE: ${self:provider.stage}
-  COMPRAS_BUCKET: compras-data-${self:provider.stage}
+    COMPRAS_TABLE: p_compras-${self:provider.stage}
+    PRODUCTOS_TABLE: p_productos-${self:provider.stage}
+    JWT_SECRET: mi-jwt-secret-super-seguro-y-secreto
+    STAGE: ${self:provider.stage}
+    COMPRAS_BUCKET: compras-data-${self:provider.stage}
 
 
 layers:
