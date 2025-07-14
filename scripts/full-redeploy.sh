@@ -46,15 +46,15 @@ echo "📦 Iniciando redeploy completo [$STAGE] ($TIMESTAMP)..." | tee -a "$MAST
 # === 1. Clonar repositorio (si se pasa --clone)
 if [ "$CLONE" = true ]; then
   echo "📥 Clonando repositorio..." | tee -a "$MASTER_LOG"
-  ~/scripts/clone.sh >> "$MASTER_LOG" 2>&1
+  ~/scripts-deploy-cloud/clone.sh >> "$MASTER_LOG" 2>&1
 else
   echo "⏭️  Clonado omitido (sin --clone)" | tee -a "$MASTER_LOG"
 fi
 
 # === 2. Desplegar APIs
-~/scripts/deploy-usuarios.sh -s "$STAGE"
-~/scripts/deploy-productos.sh -s "$STAGE"
-~/scripts/deploy-compras.sh -s "$STAGE"
+~/scripts-deploy-cloud/deploy-usuarios.sh -s "$STAGE"
+~/scripts-deploy-cloud/deploy-productos.sh -s "$STAGE"
+~/scripts-deploy-cloud/deploy-compras.sh -s "$STAGE"
 
 # === 3. Mostrar endpoints
 echo -e "\n🌐 Endpoints desplegados en $STAGE:" | tee -a "$MASTER_LOG"
