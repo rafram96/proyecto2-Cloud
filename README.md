@@ -171,15 +171,6 @@ src/
 - ✅ **Eliminación automática**: Remove stack antes de redeploy
 - ✅ **Validación de dependencias**: Verifica layers y packages
 
-### Prerrequisitos:
-```bash
-# Instalar herramientas
-npm install -g serverless
-pip install boto3
-
-# Configurar AWS CLI
-aws configure
-```
 
 ## 🔐 Seguridad Implementada
 
@@ -209,6 +200,7 @@ aws configure
 - 🔧 **Mantenimiento**: Una sola infraestructura para todos los tenants
 - 📈 **Escalabilidad**: Nuevos tenants sin cambios de código
 
+
 ### Tenants de Ejemplo:
 ```javascript
 // Tenants configurados en frontend
@@ -220,15 +212,13 @@ const TENANTS = {
 ```
 
 ## 📊 Análisis de Datos con Athena
-
 ### Base de Datos: `tienda_electronicos_${stage}`
-
 #### Tablas Disponibles:
 1. **`compras_json`** - Datos completos en formato JSON
 2. **`compras_csv`** - Datos agregados para queries rápidas
 
-### Queries SQL Implementadas:
 
+### Queries SQL Implementadas:
 #### 1. Total de ventas por tenant (últimos 30 días)
 ```sql
 SELECT 
@@ -278,7 +268,6 @@ LIMIT 20;
 ```
 
 ### Configuración de Athena:
-- **Ubicación de resultados**: `s3://athena-results-${stage}/`
 - **Formato de datos**: Parquet optimizado para consultas
 - **Particionado**: Por año/mes/día/tenant_id para performance
 
@@ -303,86 +292,8 @@ LIMIT 20;
 - **Axios** (Cliente HTTP)
 - **Lucide React** (Iconografía)
 
-### DevOps:
-- **Serverless Framework** (IaC)
-- **AWS CLI** (Deployment y configuración)
-- **Bash Scripts** (Automatización de deployment)
-- **npm/pip** (Gestión de dependencias)
 
-## 🌟 Características Destacadas
 
-### Multi-Tenancy Avanzado:
-- Cada tenant tiene datos completamente aislados
-- Índices de Elasticsearch separados por tenant
-- Particionamiento en S3 por tenant_id
-- Switching de tenant en tiempo real desde frontend
-
-### Escalabilidad Serverless:
-- Auto-scaling automático de Lambda
-- DynamoDB on-demand pricing
-- Paginación optimizada en todas las APIs
-- Caching inteligente de responses
-
-### Observabilidad Completa:
-- CloudWatch Logs estructurados
-- Métricas personalizadas de DynamoDB y Lambda
-- Trazabilidad de errores con stack traces
-- Logs de deployment detallados
-
-### Developer Experience:
-- Código documentado en español
-- Manejo de errores consistente
-- Estructura de respuestas uniforme
-- Scripts de deployment automatizados
-- TypeScript para type safety
-
-## 📝 URLs y Configuración
-
-### URLs de Acceso (Stage dev):
-- **Frontend**: `https://frontend-tienda-dev.s3-website-us-east-1.amazonaws.com`
-- **API Usuarios**: `https://[api-id].execute-api.us-east-1.amazonaws.com/dev/auth/`
-- **API Productos**: `https://[api-id].execute-api.us-east-1.amazonaws.com/dev/productos/`
-- **API Compras**: `https://[api-id].execute-api.us-east-1.amazonaws.com/dev/compras/`
-
-### Variables de Entorno:
-```yaml
-# Compartidas entre APIs
-JWT_SECRET: "mi-jwt-secret-super-seguro-y-secreto"
-STAGE: "${opt:stage, 'dev'}"
-
-# API Productos específicas
-PRODUCTOS_TABLE: "p_productos-${stage}"
-ELASTICSEARCH_URL: "http://44.198.72.193:9400"
-IMAGES_BUCKET: "imagenes-productos-${stage}"
-
-# API Compras específicas
-COMPRAS_TABLE: "p_compras-${stage}"
-COMPRAS_BUCKET: "compras-data-${stage}"
-```
-
-### Credenciales de Prueba:
-```javascript
-// Usuarios de ejemplo por tenant
-{
-  tenant_001: { email: "admin@techstore.pe", password: "password123" },
-  tenant_002: { email: "manager@electromax.com", password: "secure456" },
-  tenant_003: { email: "owner@gadgetworld.net", password: "admin789" }
-}
-```
-
-## 📚 Documentación Adicional
-
-### Archivos de Documentación:
-- [`docs/data-model.md`](docs/data-model.md) - Modelos de datos detallados
-- [`docs/athena-queries.md`](docs/athena-queries.md) - Queries SQL completas
-- [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) - Estado de implementación
-- [`docs/elasticsearch-guide.md`](docs/elasticsearch-guide.md) - Configuración de búsqueda
-- [`docs/SERVERLESS-MASTER-GUIDE.md`](docs/SERVERLESS-MASTER-GUIDE.md) - Guía de Serverless
-
-### APIs Swagger:
-- **API Usuarios**: Endpoints de autenticación y gestión de usuarios
-- **API Productos**: CRUD completo con búsqueda avanzada  
-- **API Compras**: Gestión de órdenes y historial
 
 ## 🚧 Estado del Proyecto
 
@@ -393,19 +304,10 @@ COMPRAS_BUCKET: "compras-data-${stage}"
 - [x] DynamoDB Streams habilitados para CDC
 - [x] Ingesta en tiempo real (DynamoDB → Elasticsearch + S3)
 - [x] Frontend React con TypeScript funcional
-- [x] 3 Queries SQL para Athena con análisis de negocio
+- [] 3 Queries SQL para Athena con análisis de negocio
 - [x] Deployment automatizado multi-stage
 - [x] Scripts de automation completos
 - [x] Documentación técnica completa
-
-### 🎯 Mejoras Futuras:
-1. **CloudFront CDN** para el frontend
-2. **CI/CD con GitHub Actions** 
-3. **Rate limiting** en API Gateway
-4. **Métricas personalizadas** en CloudWatch
-5. **Alertas** para errores críticos
-6. **Tests automatizados** (unit + integration)
-7. **Swagger UI** interactivo
 
 ---
 
@@ -416,8 +318,6 @@ COMPRAS_BUCKET: "compras-data-${stage}"
 ✅ **JWT con expiración**: 1 hora con validación centralizada  
 ✅ **DynamoDB Streams**: Habilitados para CDC en tiempo real  
 ✅ **Ingesta de Datos**: DynamoDB → Elasticsearch + S3 automática  
-✅ **Frontend Funcional**: React 18 + TypeScript con autenticación  
-✅ **Análisis SQL**: 3 queries Athena para reportes de negocio  
 ✅ **Deployment Automatizado**: Scripts multi-stage con error handling  
 ✅ **Documentación Completa**: README, docs técnicos y APIs documentadas  
 
